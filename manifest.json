@@ -1,0 +1,15 @@
+{
+  "name": "GiOrders Pro",
+  "short_name": "GiOrders Pro",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f2f7",
+  "theme_color": "#0A84FF",
+  "icons": [
+    {
+      "src": "1FFB8DDC-1EC1-4569-971E-598213CC5587.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
