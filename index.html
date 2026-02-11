@@ -6,98 +6,27 @@
 <title>GiOrders</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
 
 <style>
-body{
-  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
-  background:#f2f2f7;
-  padding:16px;
-}
-
-h1{
-  text-align:center;
-  color:#0A84FF;
-  margin-bottom:5px;
-}
-
-.logo{
-  display:block;
-  margin:0 auto 10px auto;
-  width:80px;
-}
-
-.card{
-  background:white;
-  padding:16px;
-  border-radius:16px;
-  margin-bottom:16px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.08);
-}
-
-.card h3{
-  margin-top:0;
-  font-size:16px;
-}
-
-button{
-  padding:8px 14px;
-  border:none;
-  border-radius:10px;
-  font-size:13px;
-  margin-top:8px;
-}
-
+body{font-family:-apple-system,sans-serif;background:#f2f2f7;padding:16px;}
+h1{text-align:center;color:#0A84FF;}
+.logo{display:block;margin:0 auto 10px;width:80px;}
+.card{background:white;padding:16px;border-radius:16px;margin-bottom:16px;
+box-shadow:0 6px 18px rgba(0,0,0,0.08);}
+button{padding:8px 14px;border:none;border-radius:10px;font-size:13px;margin-top:8px;}
 .primary{background:#0A84FF;color:white;}
 .red{background:#ff3b30;color:white;}
 .green{background:#34c759;color:white;}
-
-input,select{
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  border-radius:10px;
-  border:1px solid #d1d1d6;
-  font-size:14px;
-}
-
-.row{
-  display:flex;
-  gap:8px;
-}
-
-.order-line{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 0;
-  border-bottom:1px solid #eee;
-  font-size:14px;
-}
-
-.badge{
-  padding:4px 10px;
-  border-radius:20px;
-  font-size:11px;
-  color:white;
-}
-
+input,select{width:100%;padding:8px;margin-bottom:8px;border-radius:10px;border:1px solid #ccc;}
+.row{display:flex;gap:8px;}
+.order-line{display:flex;justify-content:space-between;align-items:center;
+padding:8px 0;border-bottom:1px solid #eee;font-size:14px;}
+.badge{padding:4px 10px;border-radius:20px;font-size:11px;color:white;}
 .badge.green{background:#34c759;}
 .badge.red{background:#ff3b30;}
-
-.summary-box{
-  background:#f9f9fb;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:6px;
-  font-size:14px;
-}
-
-@media print{
-  button{display:none;}
-  body{background:white;}
-}
+.summary-box{background:#f4f4f6;padding:10px;border-radius:10px;margin-bottom:6px;}
+@media print{button{display:none;}body{background:white;}}
 </style>
 </head>
 
@@ -115,13 +44,13 @@ let eventi = JSON.parse(localStorage.getItem("gi_eventi")) || {};
 let eventoCorrente = null;
 let taglie = ["XS","S","M","L","XL","XXL"];
 
-/* ---------- HOME ---------- */
+/* HOME */
 
 function renderHome(){
   evento.style.display="none";
   home.style.display="block";
 
-  let html = `
+  let html=`
   <div class="card">
     <h3>Crea Nuovo Evento</h3>
     <input id="nomeEvento" placeholder="Nome Evento">
@@ -138,19 +67,18 @@ function renderHome(){
   `;
 
   for(let nome in eventi){
-    html += `<button onclick="apriEvento('${nome}')">${nome}</button><br>`;
+    html+=`<button onclick="apriEvento('${nome}')">${nome}</button><br>`;
   }
 
-  html += `</div>`;
-  home.innerHTML = html;
+  html+=`</div>`;
+  home.innerHTML=html;
 }
 
 function creaEvento(){
-  let nome = nomeEvento.value;
-  let tipo = tipoEvento.value;
-  let prezzo = parseFloat(prezzoEvento.value);
-
-  if(!nome || !prezzo) return;
+  let nome=nomeEvento.value;
+  let tipo=tipoEvento.value;
+  let prezzo=parseFloat(prezzoEvento.value);
+  if(!nome||!prezzo)return;
 
   eventi[nome]={tipo,prezzo,ordini:[]};
   salvaEventi();
@@ -158,7 +86,7 @@ function creaEvento(){
 }
 
 function apriEvento(nome){
-  eventoCorrente = nome;
+  eventoCorrente=nome;
   renderEvento();
 }
 
@@ -166,19 +94,19 @@ function salvaEventi(){
   localStorage.setItem("gi_eventi",JSON.stringify(eventi));
 }
 
-/* ---------- EVENTO ---------- */
+/* EVENTO */
 
 function renderEvento(){
   home.style.display="none";
   evento.style.display="block";
 
-  let ev = eventi[eventoCorrente];
+  let ev=eventi[eventoCorrente];
 
   let html=`
   <div class="card">
     <button onclick="renderHome()">← Torna agli Eventi</button>
     <h3>${eventoCorrente}</h3>
-    <p><strong>Prezzo fisso:</strong> € ${ev.prezzo}</p>
+    <p><strong>Prezzo:</strong> € ${ev.prezzo}</p>
   </div>
 
   <div class="card">
@@ -190,15 +118,15 @@ function renderEvento(){
     taglie.forEach(t=>{
       html+=`
       <div class="row">
-        <select style="flex:1;"><option>${t}</option></select>
-        <select id="q_${t}" style="flex:1;">
+        <div style="flex:1">${t}</div>
+        <select id="q_${t}" style="flex:1">
           <option value="0">0</option>
           ${[1,2,3,4,5,6,7,8,9].map(n=>`<option>${n}</option>`).join("")}
         </select>
       </div>
       `;
     });
-  } else {
+  }else{
     html+=`
     <select id="q_obj">
       <option value="0">Quantità</option>
@@ -219,7 +147,12 @@ function renderEvento(){
   <div class="card">
     <h3>Riepilogo Evento</h3>
     <div id="riepilogo"></div>
-    <button class="primary" onclick="window.print()">Stampa Evento</button>
+  </div>
+
+  <div class="card">
+    <h3>Riepilogo Ordini (Alfabetico)</h3>
+    <div id="riepilogoOrdini"></div>
+    <button class="primary" onclick="window.print()">Stampa Completa</button>
   </div>
   `;
 
@@ -230,10 +163,9 @@ function renderEvento(){
 function aggiungiOrdine(){
   let ev=eventi[eventoCorrente];
   let nome=cliente.value;
-  if(!nome) return;
+  if(!nome)return;
 
-  let dettagli={};
-  let totale=0;
+  let dettagli={},totale=0;
 
   if(ev.tipo==="maglia"){
     taglie.forEach(t=>{
@@ -241,15 +173,19 @@ function aggiungiOrdine(){
       if(q>0){
         dettagli[t]=q;
         totale+=q*ev.prezzo;
+        document.getElementById("q_"+t).value="0"; // reset
       }
     });
-  } else {
+  }else{
     let q=parseInt(q_obj.value);
     if(q>0){
       dettagli["pezzi"]=q;
       totale+=q*ev.prezzo;
+      q_obj.value="0"; // reset
     }
   }
+
+  cliente.value=""; // reset nome
 
   ev.ordini.push({nome,dettagli,totale,pagato:false});
   salvaEventi();
@@ -260,13 +196,14 @@ function aggiornaEvento(){
   let ev=eventi[eventoCorrente];
   let lista=document.getElementById("listaOrdini");
   let riepilogo=document.getElementById("riepilogo");
+  let riepilogoOrdini=document.getElementById("riepilogoOrdini");
 
   lista.innerHTML="";
   let inc=0,nonInc=0;
   let riepilogoTaglie={};
 
   ev.ordini.forEach((o,i)=>{
-    if(o.pagato) inc+=o.totale;
+    if(o.pagato)inc+=o.totale;
     else nonInc+=o.totale;
 
     for(let k in o.dettagli){
@@ -294,13 +231,30 @@ function aggiornaEvento(){
     <div class="summary-box">Totale Da Incassare: € ${nonInc}</div>
   `;
 
-  if(ev.tipo==="maglia"){
-    for(let t in riepilogoTaglie){
-      htmlR+=`<div class="summary-box">Totale ${t}: ${riepilogoTaglie[t]}</div>`;
-    }
+  for(let t in riepilogoTaglie){
+    htmlR+=`<div class="summary-box">Totale ${t}: ${riepilogoTaglie[t]}</div>`;
   }
 
   riepilogo.innerHTML=htmlR;
+
+  // RIEPILOGO ALFABETICO
+  let ordiniOrdinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
+  riepilogoOrdini.innerHTML="";
+
+  ordiniOrdinati.forEach(o=>{
+    let dettagli="";
+    for(let k in o.dettagli){
+      dettagli+=`${o.dettagli[k]} ${k} `;
+    }
+    riepilogoOrdini.innerHTML+=`
+      <div class="summary-box">
+        <strong>${o.nome}</strong> - ${dettagli}
+        <span class="badge ${o.pagato?'green':'red'}">
+          ${o.pagato?'PAGATO':'NON PAGATO'}
+        </span>
+      </div>
+    `;
+  });
 }
 
 function toggle(i){
