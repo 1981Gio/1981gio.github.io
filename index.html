@@ -17,8 +17,6 @@
 body{font-family:-apple-system,sans-serif;background:var(--bg);
 color:var(--text);padding:16px;}
 
-h1{text-align:center;color:#0A84FF;}
-
 .card{
 background:var(--card);
 padding:16px;
@@ -28,10 +26,10 @@ box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 
 button{
-padding:8px 12px;
+padding:10px;
 border:none;
-border-radius:10px;
-font-size:13px;
+border-radius:12px;
+font-size:14px;
 margin-top:6px;
 }
 
@@ -50,8 +48,8 @@ border:1px solid #ccc;
 display:flex;
 gap:8px;
 align-items:center;
-margin-bottom:12px;
-padding-bottom:6px;
+margin-bottom:14px;
+padding-bottom:8px;
 border-bottom:1px solid #e5e5ea;
 }
 
@@ -71,6 +69,13 @@ transition:.3s;
 input:checked + .slider{background:#34c759;}
 input:checked + .slider:before{transform:translateX(20px);}
 
+.stat-box{
+background:#e9f1ff;
+padding:10px;
+border-radius:10px;
+margin-bottom:6px;
+}
+
 .summary-box{
 background:#f4f4f6;
 padding:10px;
@@ -78,11 +83,16 @@ border-radius:10px;
 margin-bottom:6px;
 }
 
-.stat-box{
-background:#e9f1ff;
-padding:10px;
-border-radius:10px;
-margin-bottom:6px;
+.pin-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+margin-top:15px;
+}
+
+.pin-grid button{
+font-size:20px;
+padding:18px;
 }
 
 @media print{
@@ -101,37 +111,80 @@ body{background:white;}
 
 /* ================= PIN ================= */
 
-let savedPIN = localStorage.getItem("gi_pin") || "1234";
+let savedPIN = localStorage.getItem("gi_pin") || "1926";
+let pinValue="";
 
 function renderLogin(){
 login.innerHTML=`
-<div class="card">
-<h3>Accesso GiOrders Pro</h3>
-<input type="password" id="pinInput" placeholder="Inserisci PIN">
-<button class="primary" onclick="checkPIN()">Accedi</button>
+<div class="card" style="text-align:center;">
+<h2>GiOrders Pro</h2>
+
+<div id="dots" style="font-size:28px;letter-spacing:10px;margin:20px 0;">
+○ ○ ○ ○
+</div>
+
+<div class="pin-grid">
+${[1,2,3,4,5,6,7,8,9].map(n=>`
+<button onclick="digita(${n})">${n}</button>
+`).join("")}
+<button onclick="cancella()">⌫</button>
+<button onclick="digita(0)">0</button>
+<button onclick="resetPin()">Reset</button>
+</div>
 </div>`;
 }
 
-function checkPIN(){
-if(pinInput.value===savedPIN){
+function digita(n){
+if(pinValue.length>=4)return;
+pinValue+=n;
+aggiornaDots();
+if(pinValue.length===4){
+setTimeout(controllaPIN,200);
+}
+}
+
+function cancella(){
+pinValue=pinValue.slice(0,-1);
+aggiornaDots();
+}
+
+function resetPin(){
+pinValue="";
+aggiornaDots();
+}
+
+function aggiornaDots(){
+let out="";
+for(let i=0;i<4;i++){
+out+= i<pinValue.length ? "● " : "○ ";
+}
+document.getElementById("dots").innerHTML=out;
+}
+
+function controllaPIN(){
+if(pinValue===savedPIN){
 login.style.display="none";
 app.style.display="block";
 renderHome();
-}else alert("PIN errato");
+}else{
+alert("PIN errato");
+pinValue="";
+aggiornaDots();
+}
 }
 
 function cambiaPIN(){
-let nuovo=prompt("Nuovo PIN (min 4 cifre)");
+let nuovo=prompt("Nuovo PIN (4 cifre)");
 if(nuovo && nuovo.length>=4){
-localStorage.setItem("gi_pin",nuovo);
 savedPIN=nuovo;
+localStorage.setItem("gi_pin",nuovo);
 alert("PIN aggiornato");
 }
 }
 
 /* ================= CORE ================= */
 
-let eventi = JSON.parse(localStorage.getItem("gi_eventi")) || {};
+let eventi=JSON.parse(localStorage.getItem("gi_eventi"))||{};
 let eventoCorrente=null;
 let taglie=["XS","S","M","L","XL","XXL"];
 
@@ -146,11 +199,10 @@ function renderHome(){
 let html=`
 <div class="card">
 <button onclick="toggleDark()">🌙 Modalità</button>
-<button onclick="cambiaPIN()">🔐 PIN</button>
+<button onclick="cambiaPIN()">🔐 Cambia PIN</button>
 <button onclick="esportaBackup()">💾 Backup</button>
 <button onclick="importaBackup()">📥 Importa</button>
 <input type="file" id="fileImport" style="display:none" onchange="leggiBackup(event)">
-
 <h3>Crea Evento</h3>
 <input id="nomeEvento" placeholder="Nome Evento">
 <select id="tipoEvento">
@@ -202,6 +254,7 @@ renderEvento();
 /* ================= EVENTO ================= */
 
 function renderEvento(){
+
 let ev=eventi[eventoCorrente];
 
 let html=`
@@ -284,10 +337,10 @@ function aggiornaEvento(){
 let ev=eventi[eventoCorrente];
 let lista=document.getElementById("listaOrdini");
 let stats=document.getElementById("stats");
-let riepilogoDiv=document.getElementById("riepilogoAlfabetico");
+let riepilogo=document.getElementById("riepilogoAlfabetico");
 
 lista.innerHTML="";
-riepilogoDiv.innerHTML="";
+riepilogo.innerHTML="";
 
 let inc=0,nonInc=0,totPezzi=0;
 let riepilogoTaglie={};
@@ -310,6 +363,8 @@ lista.innerHTML+=`
 <strong>${o.nome}</strong><br>
 <small>${dettagliTesto} - € ${o.totale}</small>
 </div>
+<button onclick="modificaOrdine(${i})">✏️</button>
+<button class="red" onclick="eliminaOrdine(${i})">🗑</button>
 <label class="switch">
 <input type="checkbox" ${o.pagato?'checked':''}
 onchange="togglePagato(${i})">
@@ -318,9 +373,9 @@ onchange="togglePagato(${i})">
 </div>`;
 });
 
-/* STATISTICHE */
+/* STAT */
 
-let media = ev.ordini.length ? (inc+nonInc)/ev.ordini.length : 0;
+let media = ev.ordini.length? (inc+nonInc)/ev.ordini.length:0;
 let percentPagato = (inc+nonInc)? ((inc/(inc+nonInc))*100).toFixed(1):0;
 
 let statHTML=`
@@ -338,16 +393,15 @@ statHTML+=`<div class="stat-box">Totale ${t}: ${riepilogoTaglie[t]}</div>`;
 
 stats.innerHTML=statHTML;
 
-/* RIEPILOGO ALFABETICO */
+/* RIEPILOGO A-Z */
 
 let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
-
 ordinati.forEach(o=>{
 let dettagliTesto="";
 for(let k in o.dettagli){
 dettagliTesto+=o.dettagli[k]+" "+k+" ";
 }
-riepilogoDiv.innerHTML+=`
+riepilogo.innerHTML+=`
 <div class="summary-box">
 <strong>${o.nome}</strong><br>
 ${dettagliTesto}<br>
@@ -359,6 +413,22 @@ ${dettagliTesto}<br>
 function togglePagato(i){
 eventi[eventoCorrente].ordini[i].pagato=
 !eventi[eventoCorrente].ordini[i].pagato;
+salva();
+aggiornaEvento();
+}
+
+function eliminaOrdine(i){
+if(confirm("Eliminare ordine?")){
+eventi[eventoCorrente].ordini.splice(i,1);
+salva();
+aggiornaEvento();
+}
+}
+
+function modificaOrdine(i){
+let ordine=eventi[eventoCorrente].ordini[i];
+let nuovoNome=prompt("Modifica nome:",ordine.nome);
+if(nuovoNome) ordine.nome=nuovoNome;
 salva();
 aggiornaEvento();
 }
@@ -384,7 +454,7 @@ let reader=new FileReader();
 reader.onload=function(e){
 let dati=JSON.parse(e.target.result);
 eventi=dati.eventi||{};
-savedPIN=dati.pin||"1234";
+savedPIN=dati.pin||"1926";
 localStorage.setItem("gi_eventi",JSON.stringify(eventi));
 localStorage.setItem("gi_pin",savedPIN);
 alert("Backup ripristinato");
