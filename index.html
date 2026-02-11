@@ -9,50 +9,117 @@
 <link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
 
 <style>
-body{font-family:-apple-system,sans-serif;background:#f2f2f7;padding:16px;}
+:root{
+  --bg:#f2f2f7;
+  --card:#ffffff;
+  --text:#000000;
+}
+.dark{
+  --bg:#1c1c1e;
+  --card:#2c2c2e;
+  --text:#ffffff;
+}
+body{
+  font-family:-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  padding:16px;
+}
 h1{text-align:center;color:#0A84FF;}
-.logo{display:block;margin:0 auto 10px;width:80px;}
-.card{background:white;padding:16px;border-radius:16px;margin-bottom:16px;
-box-shadow:0 6px 18px rgba(0,0,0,0.08);}
-button{padding:8px 14px;border:none;border-radius:10px;font-size:13px;margin-top:8px;}
+.card{
+  background:var(--card);
+  padding:16px;
+  border-radius:16px;
+  margin-bottom:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:10px;
+  font-size:13px;
+  margin-top:6px;
+}
 .primary{background:#0A84FF;color:white;}
 .red{background:#ff3b30;color:white;}
 .green{background:#34c759;color:white;}
-input,select{width:100%;padding:8px;margin-bottom:8px;border-radius:10px;border:1px solid #ccc;}
+input,select{
+  width:100%;
+  padding:8px;
+  margin-bottom:8px;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
 .row{display:flex;gap:8px;}
-.order-line{display:flex;justify-content:space-between;align-items:center;
-padding:8px 0;border-bottom:1px solid #eee;font-size:14px;}
-.badge{padding:4px 10px;border-radius:20px;font-size:11px;color:white;}
+.badge{
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:11px;
+  color:white;
+}
 .badge.green{background:#34c759;}
 .badge.red{background:#ff3b30;}
-.summary-box{background:#f4f4f6;padding:10px;border-radius:10px;margin-bottom:6px;}
-@media print{button{display:none;}body{background:white;}}
+@media print{button{display:none;}}
 </style>
 </head>
 
 <body>
 
-<img src="1FFB8DDC-1EC1-4569-971E-598213CC5587.png" class="logo">
-<h1>GiOrders</h1>
-
-<div id="home"></div>
-<div id="evento" style="display:none;"></div>
+<div id="login"></div>
+<div id="app" style="display:none;"></div>
 
 <script>
 
+/* ---------- PIN SYSTEM ---------- */
+
+let savedPIN = localStorage.getItem("gi_pin") || "1234";
+
+function renderLogin(){
+  login.innerHTML=`
+  <div class="card">
+    <h3>Accesso GiOrders</h3>
+    <input type="password" id="pinInput" placeholder="Inserisci PIN">
+    <button class="primary" onclick="checkPIN()">Accedi</button>
+  </div>`;
+}
+
+function checkPIN(){
+  if(pinInput.value===savedPIN){
+    login.style.display="none";
+    app.style.display="block";
+    renderHome();
+  }else{
+    alert("PIN errato");
+  }
+}
+
+function cambiaPIN(){
+  let nuovo = prompt("Inserisci nuovo PIN (4 cifre)");
+  if(nuovo && nuovo.length>=4){
+    localStorage.setItem("gi_pin", nuovo);
+    savedPIN = nuovo;
+    alert("PIN aggiornato");
+  }
+}
+
+/* ---------- APP ---------- */
+
 let eventi = JSON.parse(localStorage.getItem("gi_eventi")) || {};
-let eventoCorrente = null;
-let taglie = ["XS","S","M","L","XL","XXL"];
+let eventoCorrente=null;
+let taglie=["XS","S","M","L","XL","XXL"];
+
+function salva(){
+  localStorage.setItem("gi_eventi",JSON.stringify(eventi));
+}
 
 /* HOME */
 
 function renderHome(){
-  evento.style.display="none";
-  home.style.display="block";
-
   let html=`
   <div class="card">
-    <h3>Crea Nuovo Evento</h3>
+    <button onclick="toggleDark()">🌙 Modalità Scura</button>
+    <button onclick="cambiaPIN()">🔐 Cambia PIN</button>
+    <h3>Crea Evento</h3>
     <input id="nomeEvento" placeholder="Nome Evento">
     <select id="tipoEvento">
       <option value="maglia">T-Shirt</option>
@@ -63,15 +130,19 @@ function renderHome(){
   </div>
 
   <div class="card">
-    <h3>Eventi Attivi</h3>
+    <h3>Eventi</h3>
   `;
 
   for(let nome in eventi){
-    html+=`<button onclick="apriEvento('${nome}')">${nome}</button><br>`;
+    html+=`
+    <div class="row">
+      <button style="flex:1" onclick="apriEvento('${nome}')">${nome}</button>
+      <button class="red" onclick="eliminaEvento('${nome}')">X</button>
+    </div>`;
   }
 
   html+=`</div>`;
-  home.innerHTML=html;
+  app.innerHTML=html;
 }
 
 function creaEvento(){
@@ -81,8 +152,16 @@ function creaEvento(){
   if(!nome||!prezzo)return;
 
   eventi[nome]={tipo,prezzo,ordini:[]};
-  salvaEventi();
+  salva();
   renderHome();
+}
+
+function eliminaEvento(nome){
+  if(confirm("Eliminare evento "+nome+" ?")){
+    delete eventi[nome];
+    salva();
+    renderHome();
+  }
 }
 
 function apriEvento(nome){
@@ -90,23 +169,16 @@ function apriEvento(nome){
   renderEvento();
 }
 
-function salvaEventi(){
-  localStorage.setItem("gi_eventi",JSON.stringify(eventi));
-}
-
 /* EVENTO */
 
 function renderEvento(){
-  home.style.display="none";
-  evento.style.display="block";
-
   let ev=eventi[eventoCorrente];
 
   let html=`
   <div class="card">
-    <button onclick="renderHome()">← Torna agli Eventi</button>
+    <button onclick="renderHome()">← Torna</button>
     <h3>${eventoCorrente}</h3>
-    <p><strong>Prezzo:</strong> € ${ev.prezzo}</p>
+    <p>Prezzo fisso: € ${ev.prezzo}</p>
   </div>
 
   <div class="card">
@@ -123,40 +195,26 @@ function renderEvento(){
           <option value="0">0</option>
           ${[1,2,3,4,5,6,7,8,9].map(n=>`<option>${n}</option>`).join("")}
         </select>
-      </div>
-      `;
+      </div>`;
     });
   }else{
     html+=`
     <select id="q_obj">
       <option value="0">Quantità</option>
       ${[1,2,3,4,5,6,7,8,9].map(n=>`<option>${n}</option>`).join("")}
-    </select>
-    `;
+    </select>`;
   }
 
   html+=`
-    <button class="primary" onclick="aggiungiOrdine()">Aggiungi Ordine</button>
+    <button class="primary" onclick="aggiungiOrdine()">Aggiungi</button>
   </div>
 
   <div class="card">
-    <h3>Storico Ordini</h3>
+    <h3>Storico</h3>
     <div id="listaOrdini"></div>
-  </div>
+  </div>`;
 
-  <div class="card">
-    <h3>Riepilogo Evento</h3>
-    <div id="riepilogo"></div>
-  </div>
-
-  <div class="card">
-    <h3>Riepilogo Ordini (Alfabetico)</h3>
-    <div id="riepilogoOrdini"></div>
-    <button class="primary" onclick="window.print()">Stampa Completa</button>
-  </div>
-  `;
-
-  evento.innerHTML=html;
+  app.innerHTML=html;
   aggiornaEvento();
 }
 
@@ -173,7 +231,7 @@ function aggiungiOrdine(){
       if(q>0){
         dettagli[t]=q;
         totale+=q*ev.prezzo;
-        document.getElementById("q_"+t).value="0"; // reset
+        document.getElementById("q_"+t).value="0";
       }
     });
   }else{
@@ -181,96 +239,43 @@ function aggiungiOrdine(){
     if(q>0){
       dettagli["pezzi"]=q;
       totale+=q*ev.prezzo;
-      q_obj.value="0"; // reset
+      q_obj.value="0";
     }
   }
 
-  cliente.value=""; // reset nome
-
+  cliente.value="";
   ev.ordini.push({nome,dettagli,totale,pagato:false});
-  salvaEventi();
+  salva();
   aggiornaEvento();
 }
 
 function aggiornaEvento(){
   let ev=eventi[eventoCorrente];
   let lista=document.getElementById("listaOrdini");
-  let riepilogo=document.getElementById("riepilogo");
-  let riepilogoOrdini=document.getElementById("riepilogoOrdini");
-
   lista.innerHTML="";
-  let inc=0,nonInc=0;
-  let riepilogoTaglie={};
 
-  ev.ordini.forEach((o,i)=>{
-    if(o.pagato)inc+=o.totale;
-    else nonInc+=o.totale;
-
-    for(let k in o.dettagli){
-      if(ev.tipo==="maglia"){
-        riepilogoTaglie[k]=(riepilogoTaglie[k]||0)+o.dettagli[k];
-      }
-    }
-
-    lista.innerHTML+=`
-    <div class="order-line">
-      <div>${o.nome} - € ${o.totale}</div>
-      <div>
-        <span class="badge ${o.pagato?'green':'red'}">
-          ${o.pagato?'PAGATO':'NON PAGATO'}
-        </span>
-        <button onclick="toggle(${i})">↺</button>
-        <button class="red" onclick="elimina(${i})">X</button>
-      </div>
-    </div>
-    `;
-  });
-
-  let htmlR=`
-    <div class="summary-box">Totale Incassato: € ${inc}</div>
-    <div class="summary-box">Totale Da Incassare: € ${nonInc}</div>
-  `;
-
-  for(let t in riepilogoTaglie){
-    htmlR+=`<div class="summary-box">Totale ${t}: ${riepilogoTaglie[t]}</div>`;
-  }
-
-  riepilogo.innerHTML=htmlR;
-
-  // RIEPILOGO ALFABETICO
-  let ordiniOrdinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
-  riepilogoOrdini.innerHTML="";
-
-  ordiniOrdinati.forEach(o=>{
-    let dettagli="";
-    for(let k in o.dettagli){
-      dettagli+=`${o.dettagli[k]} ${k} `;
-    }
-    riepilogoOrdini.innerHTML+=`
-      <div class="summary-box">
-        <strong>${o.nome}</strong> - ${dettagli}
-        <span class="badge ${o.pagato?'green':'red'}">
-          ${o.pagato?'PAGATO':'NON PAGATO'}
-        </span>
-      </div>
-    `;
-  });
+  ev.ordini
+    .sort((a,b)=>a.nome.localeCompare(b.nome))
+    .forEach(o=>{
+      lista.innerHTML+=`
+      <div class="row">
+        <div style="flex:1">${o.nome} - € ${o.totale}</div>
+        <div>
+          <span class="badge ${o.pagato?'green':'red'}">
+            ${o.pagato?'PAGATO':'NON PAGATO'}
+          </span>
+        </div>
+      </div>`;
+    });
 }
 
-function toggle(i){
-  eventi[eventoCorrente].ordini[i].pagato=
-  !eventi[eventoCorrente].ordini[i].pagato;
-  salvaEventi();
-  aggiornaEvento();
+/* DARK MODE */
+
+function toggleDark(){
+  document.body.classList.toggle("dark");
 }
 
-function elimina(i){
-  eventi[eventoCorrente].ordini.splice(i,1);
-  salvaEventi();
-  aggiornaEvento();
-}
-
-renderHome();
+renderLogin();
 
 </script>
 
