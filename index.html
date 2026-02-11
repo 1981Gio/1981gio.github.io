@@ -13,25 +13,82 @@
 <style>
 :root{--bg:#f2f2f7;--card:#fff;--text:#000;}
 .dark{--bg:#1c1c1e;--card:#2c2c2e;--text:#fff;}
-body{font-family:-apple-system,sans-serif;background:var(--bg);color:var(--text);padding:16px;}
+
+body{font-family:-apple-system,sans-serif;background:var(--bg);
+color:var(--text);padding:16px;}
+
 h1{text-align:center;color:#0A84FF;}
-.card{background:var(--card);padding:16px;border-radius:16px;margin-bottom:16px;
-box-shadow:0 6px 18px rgba(0,0,0,0.08);}
-button{padding:8px 12px;border:none;border-radius:10px;font-size:13px;margin-top:6px;}
+
+.card{
+background:var(--card);
+padding:16px;
+border-radius:16px;
+margin-bottom:16px;
+box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+
+button{
+padding:8px 12px;
+border:none;
+border-radius:10px;
+font-size:13px;
+margin-top:6px;
+}
+
 .primary{background:#0A84FF;color:white;}
 .red{background:#ff3b30;color:white;}
-input,select{width:100%;padding:8px;margin-bottom:8px;border-radius:10px;border:1px solid #ccc;}
-.row{display:flex;gap:8px;align-items:center;}
-.switch{position:relative;width:40px;height:22px;}
+
+input,select{
+width:100%;
+padding:8px;
+margin-bottom:8px;
+border-radius:10px;
+border:1px solid #ccc;
+}
+
+.row{
+display:flex;
+gap:8px;
+align-items:center;
+margin-bottom:12px;
+padding-bottom:6px;
+border-bottom:1px solid #e5e5ea;
+}
+
+.switch{position:relative;width:44px;height:24px;}
 .switch input{display:none;}
-.slider{position:absolute;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:22px;}
-.slider:before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;
-background:white;border-radius:50%;transition:.3s;}
+.slider{
+position:absolute;top:0;left:0;right:0;bottom:0;
+background:#ccc;border-radius:24px;
+}
+.slider:before{
+content:"";position:absolute;
+height:18px;width:18px;
+left:3px;bottom:3px;
+background:white;border-radius:50%;
+transition:.3s;
+}
 input:checked + .slider{background:#34c759;}
-input:checked + .slider:before{transform:translateX(18px);}
-.summary-box{background:#f4f4f6;padding:10px;border-radius:10px;margin-bottom:6px;}
-.stat-box{background:#e9f1ff;padding:10px;border-radius:10px;margin-bottom:6px;}
-@media print{button,.switch{display:none;}}
+input:checked + .slider:before{transform:translateX(20px);}
+
+.summary-box{
+background:#f4f4f6;
+padding:10px;
+border-radius:10px;
+margin-bottom:6px;
+}
+
+.stat-box{
+background:#e9f1ff;
+padding:10px;
+border-radius:10px;
+margin-bottom:6px;
+}
+
+@media print{
+button,.switch{display:none;}
+body{background:white;}
+}
 </style>
 </head>
 
@@ -44,7 +101,7 @@ input:checked + .slider:before{transform:translateX(18px);}
 
 /* ================= PIN ================= */
 
-let savedPIN = localStorage.getItem("gi_pin") || "1926";
+let savedPIN = localStorage.getItem("gi_pin") || "1234";
 
 function renderLogin(){
 login.innerHTML=`
@@ -65,7 +122,7 @@ renderHome();
 
 function cambiaPIN(){
 let nuovo=prompt("Nuovo PIN (min 4 cifre)");
-if(nuovo&&nuovo.length>=4){
+if(nuovo && nuovo.length>=4){
 localStorage.setItem("gi_pin",nuovo);
 savedPIN=nuovo;
 alert("PIN aggiornato");
@@ -82,7 +139,10 @@ function salva(){
 localStorage.setItem("gi_eventi",JSON.stringify(eventi));
 }
 
+/* ================= HOME ================= */
+
 function renderHome(){
+
 let html=`
 <div class="card">
 <button onclick="toggleDark()">🌙 Modalità</button>
@@ -90,6 +150,7 @@ let html=`
 <button onclick="esportaBackup()">💾 Backup</button>
 <button onclick="importaBackup()">📥 Importa</button>
 <input type="file" id="fileImport" style="display:none" onchange="leggiBackup(event)">
+
 <h3>Crea Evento</h3>
 <input id="nomeEvento" placeholder="Nome Evento">
 <select id="tipoEvento">
@@ -100,7 +161,8 @@ let html=`
 <button class="primary" onclick="creaEvento()">Crea</button>
 </div>
 
-<div class="card"><h3>Eventi</h3>`;
+<div class="card"><h3>Eventi</h3>
+`;
 
 for(let nome in eventi){
 html+=`
@@ -146,11 +208,12 @@ let html=`
 <div class="card">
 <button onclick="renderHome()">← Torna</button>
 <h3>${eventoCorrente}</h3>
-<p>Prezzo: € ${ev.prezzo}</p>
+<p><strong>Prezzo:</strong> € ${ev.prezzo}</p>
 </div>
 
 <div class="card">
-<input id="cliente" placeholder="Nome Cliente">`;
+<input id="cliente" placeholder="Nome Cliente">
+`;
 
 if(ev.tipo==="maglia"){
 taglie.forEach(t=>{
@@ -177,6 +240,7 @@ html+=`
 
 <div class="card"><h3>Ordini</h3><div id="listaOrdini"></div></div>
 <div class="card"><h3>Statistiche</h3><div id="stats"></div></div>
+<div class="card"><h3>📋 Riepilogo Ordini (A-Z)</h3><div id="riepilogoAlfabetico"></div></div>
 <button onclick="window.print()">🖨 Stampa</button>
 `;
 
@@ -216,26 +280,36 @@ aggiornaEvento();
 }
 
 function aggiornaEvento(){
+
 let ev=eventi[eventoCorrente];
 let lista=document.getElementById("listaOrdini");
 let stats=document.getElementById("stats");
+let riepilogoDiv=document.getElementById("riepilogoAlfabetico");
 
 lista.innerHTML="";
+riepilogoDiv.innerHTML="";
+
 let inc=0,nonInc=0,totPezzi=0;
 let riepilogoTaglie={};
 
 ev.ordini.forEach((o,i)=>{
+
 if(o.pagato)inc+=o.totale;else nonInc+=o.totale;
 
+let dettagliTesto="";
 for(let k in o.dettagli){
 totPezzi+=o.dettagli[k];
+dettagliTesto+=o.dettagli[k]+" "+k+" ";
 if(ev.tipo==="maglia")
 riepilogoTaglie[k]=(riepilogoTaglie[k]||0)+o.dettagli[k];
 }
 
 lista.innerHTML+=`
 <div class="row">
-<div style="flex:1">${o.nome} - € ${o.totale}</div>
+<div style="flex:1">
+<strong>${o.nome}</strong><br>
+<small>${dettagliTesto} - € ${o.totale}</small>
+</div>
 <label class="switch">
 <input type="checkbox" ${o.pagato?'checked':''}
 onchange="togglePagato(${i})">
@@ -244,7 +318,9 @@ onchange="togglePagato(${i})">
 </div>`;
 });
 
-let media = ev.ordini.length? (inc+nonInc)/ev.ordini.length : 0;
+/* STATISTICHE */
+
+let media = ev.ordini.length ? (inc+nonInc)/ev.ordini.length : 0;
 let percentPagato = (inc+nonInc)? ((inc/(inc+nonInc))*100).toFixed(1):0;
 
 let statHTML=`
@@ -256,13 +332,28 @@ let statHTML=`
 <div class="stat-box">Percentuale pagato: ${percentPagato}%</div>
 `;
 
-if(ev.tipo==="maglia"){
 for(let t in riepilogoTaglie){
 statHTML+=`<div class="stat-box">Totale ${t}: ${riepilogoTaglie[t]}</div>`;
 }
-}
 
 stats.innerHTML=statHTML;
+
+/* RIEPILOGO ALFABETICO */
+
+let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
+
+ordinati.forEach(o=>{
+let dettagliTesto="";
+for(let k in o.dettagli){
+dettagliTesto+=o.dettagli[k]+" "+k+" ";
+}
+riepilogoDiv.innerHTML+=`
+<div class="summary-box">
+<strong>${o.nome}</strong><br>
+${dettagliTesto}<br>
+€ ${o.totale} - ${o.pagato?"PAGATO":"NON PAGATO"}
+</div>`;
+});
 }
 
 function togglePagato(i){
@@ -311,7 +402,7 @@ navigator.serviceWorker.register('sw.js');
 }
 
 renderLogin();
-</script>
 
+</script>
 </body>
 </html>
