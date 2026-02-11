@@ -12,12 +12,12 @@
 :root{
   --bg:#f2f2f7;
   --card:#ffffff;
-  --text:#000000;
+  --text:#000;
 }
 .dark{
   --bg:#1c1c1e;
   --card:#2c2c2e;
-  --text:#ffffff;
+  --text:#fff;
 }
 body{
   font-family:-apple-system,sans-serif;
@@ -50,16 +50,46 @@ input,select{
   border-radius:10px;
   border:1px solid #ccc;
 }
-.row{display:flex;gap:8px;}
-.badge{
-  padding:4px 10px;
-  border-radius:20px;
-  font-size:11px;
-  color:white;
+.row{display:flex;gap:8px;align-items:center;}
+.switch{
+  position:relative;
+  display:inline-block;
+  width:40px;
+  height:22px;
 }
-.badge.green{background:#34c759;}
-.badge.red{background:#ff3b30;}
-@media print{button{display:none;}}
+.switch input{opacity:0;width:0;height:0;}
+.slider{
+  position:absolute;
+  cursor:pointer;
+  top:0;left:0;right:0;bottom:0;
+  background-color:#ccc;
+  transition:.3s;
+  border-radius:22px;
+}
+.slider:before{
+  position:absolute;
+  content:"";
+  height:16px;width:16px;
+  left:3px;bottom:3px;
+  background:white;
+  transition:.3s;
+  border-radius:50%;
+}
+input:checked + .slider{
+  background:#34c759;
+}
+input:checked + .slider:before{
+  transform:translateX(18px);
+}
+.summary-box{
+  background:#f4f4f6;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:6px;
+}
+@media print{
+  button,.switch{display:none;}
+}
 </style>
 </head>
 
@@ -70,9 +100,9 @@ input,select{
 
 <script>
 
-/* ---------- PIN SYSTEM ---------- */
+/* ================= PIN SYSTEM ================= */
 
-let savedPIN = localStorage.getItem("gi_pin") || "1926";
+let savedPIN = localStorage.getItem("gi_pin") || "1234";
 
 function renderLogin(){
   login.innerHTML=`
@@ -94,15 +124,15 @@ function checkPIN(){
 }
 
 function cambiaPIN(){
-  let nuovo = prompt("Inserisci nuovo PIN (4 cifre)");
+  let nuovo = prompt("Inserisci nuovo PIN (min 4 cifre)");
   if(nuovo && nuovo.length>=4){
-    localStorage.setItem("gi_pin", nuovo);
-    savedPIN = nuovo;
+    localStorage.setItem("gi_pin",nuovo);
+    savedPIN=nuovo;
     alert("PIN aggiornato");
   }
 }
 
-/* ---------- APP ---------- */
+/* ================= APP CORE ================= */
 
 let eventi = JSON.parse(localStorage.getItem("gi_eventi")) || {};
 let eventoCorrente=null;
@@ -117,7 +147,7 @@ function salva(){
 function renderHome(){
   let html=`
   <div class="card">
-    <button onclick="toggleDark()">🌙 Modalità Scura</button>
+    <button onclick="toggleDark()">🌙 Modalità</button>
     <button onclick="cambiaPIN()">🔐 Cambia PIN</button>
     <h3>Crea Evento</h3>
     <input id="nomeEvento" placeholder="Nome Evento">
@@ -150,7 +180,6 @@ function creaEvento(){
   let tipo=tipoEvento.value;
   let prezzo=parseFloat(prezzoEvento.value);
   if(!nome||!prezzo)return;
-
   eventi[nome]={tipo,prezzo,ordini:[]};
   salva();
   renderHome();
@@ -178,7 +207,7 @@ function renderEvento(){
   <div class="card">
     <button onclick="renderHome()">← Torna</button>
     <h3>${eventoCorrente}</h3>
-    <p>Prezzo fisso: € ${ev.prezzo}</p>
+    <p><strong>Prezzo:</strong> € ${ev.prezzo}</p>
   </div>
 
   <div class="card">
@@ -210,9 +239,21 @@ function renderEvento(){
   </div>
 
   <div class="card">
-    <h3>Storico</h3>
+    <h3>Storico Ordini</h3>
     <div id="listaOrdini"></div>
-  </div>`;
+  </div>
+
+  <div class="card">
+    <h3>Riepilogo Evento</h3>
+    <div id="riepilogo"></div>
+  </div>
+
+  <div class="card">
+    <h3>Riepilogo Ordini (Alfabetico)</h3>
+    <div id="riepilogoOrdini"></div>
+    <button class="primary" onclick="window.print()">Stampa Completa</button>
+  </div>
+  `;
 
   app.innerHTML=html;
   aggiornaEvento();
@@ -252,24 +293,63 @@ function aggiungiOrdine(){
 function aggiornaEvento(){
   let ev=eventi[eventoCorrente];
   let lista=document.getElementById("listaOrdini");
-  lista.innerHTML="";
+  let riepilogo=document.getElementById("riepilogo");
+  let riepilogoOrdini=document.getElementById("riepilogoOrdini");
 
-  ev.ordini
-    .sort((a,b)=>a.nome.localeCompare(b.nome))
-    .forEach(o=>{
-      lista.innerHTML+=`
-      <div class="row">
-        <div style="flex:1">${o.nome} - € ${o.totale}</div>
-        <div>
-          <span class="badge ${o.pagato?'green':'red'}">
-            ${o.pagato?'PAGATO':'NON PAGATO'}
-          </span>
-        </div>
+  lista.innerHTML="";
+  let inc=0,nonInc=0;
+  let riepilogoTaglie={};
+
+  ev.ordini.forEach((o,i)=>{
+    if(o.pagato)inc+=o.totale;
+    else nonInc+=o.totale;
+
+    for(let k in o.dettagli){
+      if(ev.tipo==="maglia")
+        riepilogoTaglie[k]=(riepilogoTaglie[k]||0)+o.dettagli[k];
+    }
+
+    lista.innerHTML+=`
+    <div class="row">
+      <div style="flex:1">${o.nome} - € ${o.totale}</div>
+      <label class="switch">
+        <input type="checkbox" ${o.pagato?'checked':''}
+        onchange="togglePagato(${i})">
+        <span class="slider"></span>
+      </label>
+    </div>`;
+  });
+
+  let htmlR=`
+    <div class="summary-box">Incassato: € ${inc}</div>
+    <div class="summary-box">Da Incassare: € ${nonInc}</div>`;
+
+  for(let t in riepilogoTaglie){
+    htmlR+=`<div class="summary-box">Totale ${t}: ${riepilogoTaglie[t]}</div>`;
+  }
+
+  riepilogo.innerHTML=htmlR;
+
+  let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
+  riepilogoOrdini.innerHTML="";
+  ordinati.forEach(o=>{
+    let dettagli="";
+    for(let k in o.dettagli){
+      dettagli+=`${o.dettagli[k]} ${k} `;
+    }
+    riepilogoOrdini.innerHTML+=`
+      <div class="summary-box">
+        <strong>${o.nome}</strong> - ${dettagli}
       </div>`;
-    });
+  });
 }
 
-/* DARK MODE */
+function togglePagato(i){
+  eventi[eventoCorrente].ordini[i].pagato=
+  !eventi[eventoCorrente].ordini[i].pagato;
+  salva();
+  aggiornaEvento();
+}
 
 function toggleDark(){
   document.body.classList.toggle("dark");
