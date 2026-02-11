@@ -3,167 +3,182 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GiOrders 12 - Event Manager Pro</title>
 
-<title>GiOrders</title>
-<meta name="apple-mobile-web-app-title" content="GiOrders">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<!-- ICONA -->
-<link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
+<link rel="apple-touch-icon" href="icon.png">
 
 <style>
-html, body {
-  margin:0;
-  padding:0;
-  font-family:-apple-system, sans-serif;
-  background:#f2f2f7;
-  -webkit-user-select:none;
-  -webkit-tap-highlight-color:transparent;
-}
-
-h1 {
-  text-align:center;
-  color:#0A84FF;
-}
-
-.card {
-  background:white;
-  padding:15px;
-  margin:15px;
-  border-radius:14px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-button {
-  padding:8px 12px;
-  border:none;
-  border-radius:8px;
-  margin-top:5px;
-}
-
+body { font-family: -apple-system, sans-serif; background:#f2f2f7; padding:15px; }
+h1 { text-align:center; color:#0A84FF; }
+.card { background:white; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 10px rgba(0,0,0,0.08);}
+select, input { width:100%; padding:8px; margin:5px 0; border-radius:8px; border:1px solid #ccc;}
+button { padding:8px 12px; border:none; border-radius:8px; margin:4px 0;}
 .primary { background:#0A84FF; color:white; }
 .red { background:#ff3b30; color:white; }
 .green { background:#34c759; color:white; }
-
-select, input {
-  width:100%;
-  padding:8px;
-  margin-top:6px;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
-
-.order-line {
-  font-size:14px;
-  padding:6px 0;
-  border-bottom:1px solid #eee;
-}
-
-@media print {
-  button { display:none; }
-}
+.small { font-size:12px; padding:5px 8px; }
+.order-line { font-size:13px; padding:5px 0; border-bottom:1px solid #eee; }
+.total-box { background:#e9f5ff; padding:10px; border-radius:10px; margin-top:10px;}
+@media print { button { display:none; } body { background:white; } }
 </style>
 </head>
 
 <body>
 
-<h1>GiOrders</h1>
+<h1>GiOrders 12</h1>
 
 <div class="card">
 <h3>Nuovo Ordine</h3>
 
-<input id="nome" placeholder="Nome persona">
+<input id="cliente" placeholder="Nome Cliente">
 
-<select id="taglia">
-<option>S</option>
-<option>M</option>
-<option>L</option>
-<option>XL</option>
-<option>XXL</option>
+<!-- TAGLIA 1 -->
+<select id="taglia1">
+<option value="">Taglia 1</option>
+<option>S</option><option>M</option><option>L</option>
+<option>XL</option><option>XXL</option>
 </select>
 
-<select id="quantita">
-<option value="1">1</option>
-<option value="2">2</option>
-<option value="3">3</option>
-<option value="4">4</option>
-<option value="5">5</option>
-<option value="10">10</option>
-<option value="20">20</option>
+<select id="q1">
+<option value="0">Quantità</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option>
 </select>
 
-<input id="prezzo" type="number" placeholder="Prezzo maglia" value="20">
-
-<select id="pagato">
-<option value="no">Non pagato</option>
-<option value="si">Pagato</option>
+<!-- TAGLIA 2 -->
+<select id="taglia2">
+<option value="">Taglia 2</option>
+<option>S</option><option>M</option><option>L</option>
+<option>XL</option><option>XXL</option>
 </select>
 
-<button class="primary" onclick="aggiungi()">Aggiungi</button>
+<select id="q2">
+<option value="0">Quantità</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option>
+</select>
+
+<!-- TAGLIA 3 -->
+<select id="taglia3">
+<option value="">Taglia 3</option>
+<option>S</option><option>M</option><option>L</option>
+<option>XL</option><option>XXL</option>
+</select>
+
+<select id="q3">
+<option value="0">Quantità</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option>
+</select>
+
+<button class="primary" onclick="aggiungiOrdine()">Aggiungi</button>
 </div>
 
 <div class="card">
-<h3>Elenco Ordini</h3>
-<div id="lista"></div>
+<h3>Storico Ordini</h3>
+<div id="listaOrdini"></div>
 </div>
 
 <div class="card">
-<h3>Totale</h3>
-<div id="totale"></div>
-<button class="green" onclick="window.print()">Stampa</button>
+<h3>Riepilogo Totale Taglie</h3>
+<div id="riepilogo"></div>
+<button class="primary" onclick="window.print()">Esporta / Stampa Ordine</button>
 </div>
 
 <script>
-let ordini = JSON.parse(localStorage.getItem("ordini")) || [];
 
-function salva() {
-  localStorage.setItem("ordini", JSON.stringify(ordini));
+let ordini = [];
+
+function aggiungiOrdine(){
+    let cliente = document.getElementById("cliente").value;
+    if(cliente === "") return alert("Inserisci nome cliente");
+
+    let ordine = {
+        cliente,
+        taglie: [
+            {t:taglia1.value, q:parseInt(q1.value)},
+            {t:taglia2.value, q:parseInt(q2.value)},
+            {t:taglia3.value, q:parseInt(q3.value)}
+        ],
+        pagato:false
+    };
+
+    ordini.push(ordine);
+    salva();
+    aggiorna();
+    reset();
 }
 
-function aggiungi() {
-  let nome = document.getElementById("nome").value;
-  let taglia = document.getElementById("taglia").value;
-  let quantita = parseInt(document.getElementById("quantita").value);
-  let prezzo = parseFloat(document.getElementById("prezzo").value);
-  let pagato = document.getElementById("pagato").value;
+function aggiorna(){
+    let lista = document.getElementById("listaOrdini");
+    lista.innerHTML="";
 
-  if(!nome) return;
+    let totali = {};
 
-  ordini.push({nome, taglia, quantita, prezzo, pagato});
-  salva();
-  render();
+    ordini.forEach((o,i)=>{
+        let riga = document.createElement("div");
+        riga.className="order-line";
+
+        let testo = "<strong>"+o.cliente+"</strong><br>";
+
+        o.taglie.forEach(item=>{
+            if(item.t && item.q>0){
+                testo += item.q+" "+item.t+" ";
+                totali[item.t] = (totali[item.t]||0)+item.q;
+            }
+        });
+
+        testo += "<br>";
+        testo += o.pagato 
+            ? "<span class='green small'>PAGATO</span>"
+            : "<span class='red small'>NON PAGATO</span>";
+
+        riga.innerHTML = testo +
+        "<br><button class='small' onclick='togglePagato("+i+")'>Cambia Stato</button> " +
+        "<button class='small red' onclick='elimina("+i+")'>Elimina</button>";
+
+        lista.appendChild(riga);
+    });
+
+    let box = document.getElementById("riepilogo");
+    box.innerHTML="";
+    for(let t in totali){
+        box.innerHTML += "<div class='total-box'>Totale "+t+": "+totali[t]+"</div>";
+    }
 }
 
-function elimina(index) {
-  ordini.splice(index,1);
-  salva();
-  render();
+function togglePagato(i){
+    ordini[i].pagato = !ordini[i].pagato;
+    salva();
+    aggiorna();
 }
 
-function render() {
-  let lista = document.getElementById("lista");
-  let totaleDiv = document.getElementById("totale");
-
-  lista.innerHTML="";
-  let totale=0;
-
-  ordini.forEach((o,i)=>{
-    totale += o.quantita * o.prezzo;
-
-    lista.innerHTML += `
-      <div class="order-line">
-      ${o.nome} - ${o.taglia} x${o.quantita} - €${o.prezzo}
-      (${o.pagato})
-      <button class="red" onclick="elimina(${i})">X</button>
-      </div>
-    `;
-  });
-
-  totaleDiv.innerHTML = "Totale complessivo: €" + totale.toFixed(2);
+function elimina(i){
+    ordini.splice(i,1);
+    salva();
+    aggiorna();
 }
 
-render();
+function reset(){
+    document.getElementById("cliente").value="";
+    taglia1.value=""; q1.value="0";
+    taglia2.value=""; q2.value="0";
+    taglia3.value=""; q3.value="0";
+}
+
+function salva(){
+    localStorage.setItem("giorders", JSON.stringify(ordini));
+}
+
+function carica(){
+    let dati = localStorage.getItem("giorders");
+    if(dati) ordini = JSON.parse(dati);
+    aggiorna();
+}
+
+carica();
+
 </script>
 
 </body>
