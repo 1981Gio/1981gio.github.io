@@ -1,44 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>GiOrders Pro</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0A84FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <style>
 body{
-font-family:-apple-system;
 margin:0;
+font-family:-apple-system;
 background:#f2f2f7;
-transition:0.3s;
+transition:.3s;
 }
-
-.dark{
-background:#1c1c1e;
-color:white;
-}
+.dark{background:#1c1c1e;color:white;}
 
 .card{
 background:white;
 margin:15px;
 padding:15px;
-border-radius:15px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
-transition:0.3s;
+border-radius:16px;
+box-shadow:0 4px 12px rgba(0,0,0,.1);
+transition:.3s;
 }
-
-.dark .card{
-background:#2c2c2e;
-}
+.dark .card{background:#2c2c2e;}
 
 button{
 padding:8px 12px;
 border:none;
 border-radius:8px;
 cursor:pointer;
+margin:3px 0;
 }
 
 .primary{background:#0A84FF;color:white;}
@@ -46,32 +44,27 @@ cursor:pointer;
 .green{background:#34c759;color:white;}
 .gray{background:#d1d1d6;}
 
-select,input{
+input,select{
 padding:6px;
 border-radius:6px;
 border:1px solid #ccc;
+margin-bottom:8px;
 }
 
 .row{
-margin-bottom:14px;
+margin-bottom:12px;
 padding:12px;
 border-radius:12px;
 background:#f9f9fb;
-transition:0.3s;
+transition:.3s;
 }
-
-.dark .row{
-background:#3a3a3c;
-}
-
-.editing{
-background:#fff3cd !important;
-}
+.dark .row{background:#3a3a3c;}
+.editing{background:#fff3cd !important;}
 
 .orderTop{
 font-weight:bold;
 font-size:16px;
-margin-bottom:5px;
+margin-bottom:4px;
 }
 
 .orderBottom{
@@ -80,14 +73,21 @@ justify-content:space-between;
 font-size:14px;
 }
 
-.sizeRow{
-display:flex;
-justify-content:space-between;
-margin-bottom:8px;
-}
+.statusPaid{color:#34c759;font-weight:bold;}
+.statusUnpaid{color:#ff3b30;font-weight:bold;}
 
-.sizeRow select{
-width:45%;
+.busBar{
+height:18px;
+background:#e5e5ea;
+border-radius:10px;
+overflow:hidden;
+margin-top:6px;
+}
+.busFill{
+height:100%;
+background:#0A84FF;
+width:0%;
+transition:.4s;
 }
 
 .pinPad button{
@@ -95,8 +95,13 @@ font-size:20px;
 padding:15px;
 }
 
+@media print{
+button{display:none;}
+body{background:white;}
+}
 </style>
 </head>
+
 <body>
 
 <div id="login"></div>
@@ -104,21 +109,26 @@ padding:15px;
 
 <script>
 
-let savedPIN=localStorage.getItem("pin")||"1926";
-let eventi=JSON.parse(localStorage.getItem("eventi")||"{}");
-let eventoCorrente=null;
-let indiceModifica=null;
+/* ================= CORE ================= */
 
-let taglie=["XS","S","M","L","XL","XXL"];
+let savedPIN = localStorage.getItem("pin") || "1926";
+let eventi = JSON.parse(localStorage.getItem("eventi")||"{}");
+let eventoCorrente = null;
+let indiceModifica = null;
+let taglie = ["XS","S","M","L","XL","XXL"];
 
 function salva(){
 localStorage.setItem("eventi",JSON.stringify(eventi));
 }
 
+/* ================= PIN ================= */
+
+let pinInput="";
+
 function renderLogin(){
 login.innerHTML=`
 <div class="card" style="text-align:center;">
-<h3>GiOrders Pro</h3>
+<h2>GiOrders Pro</h2>
 <div id="dots" style="font-size:28px;letter-spacing:8px;margin:20px;">○ ○ ○ ○</div>
 <div class="pinPad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
 ${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="digit(${n})">${n}</button>`).join("")}
@@ -129,55 +139,40 @@ ${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="digit(${n})">${n}</button>`).join
 </div>`;
 }
 
-let pinInput="";
 function digit(n){
 if(pinInput.length>=4)return;
-pinInput+=n;
-updateDots();
+pinInput+=n;updateDots();
 if(pinInput.length===4)setTimeout(checkPin,200);
 }
-
-function del(){
-pinInput=pinInput.slice(0,-1);
-updateDots();
-}
-
-function clearPin(){
-pinInput="";
-updateDots();
-}
-
+function del(){pinInput=pinInput.slice(0,-1);updateDots();}
+function clearPin(){pinInput="";updateDots();}
 function updateDots(){
-let s="";
-for(let i=0;i<4;i++){
-s+=i<pinInput.length?"● ":"○ ";
+dots.innerHTML=[0,1,2,3].map(i=>i<pinInput.length?"●":"○").join(" ");
 }
-dots.innerHTML=s;
-}
-
 function checkPin(){
 if(pinInput===savedPIN){
 login.style.display="none";
 app.style.display="block";
 renderHome();
 }else{
-alert("PIN errato");
-pinInput="";
-updateDots();
+alert("PIN errato");pinInput="";updateDots();
 }
 }
+
+/* ================= HOME ================= */
 
 function renderHome(){
 app.innerHTML=`
 <div class="card">
 <h3>Nuovo Evento</h3>
-<input id="nomeEvento" placeholder="Nome evento"><br><br>
+<input id="nomeEvento" placeholder="Nome evento"><br>
 <select id="tipoEvento">
 <option value="abbigliamento">Abbigliamento</option>
 <option value="gadget">Gadget</option>
 <option value="bus">Bus</option>
-</select><br><br>
-<input id="prezzoEvento" type="number" placeholder="Prezzo unitario"><br><br>
+</select><br>
+<input id="prezzoEvento" type="number" placeholder="Prezzo unitario"><br>
+<input id="postiBus" type="number" placeholder="Posti totali (solo Bus)"><br>
 <button class="primary" onclick="creaEvento()">Crea Evento</button>
 <button onclick="toggleDark()">🌙</button>
 </div>
@@ -196,19 +191,22 @@ function creaEvento(){
 let nome=nomeEvento.value;
 let tipo=tipoEvento.value;
 let prezzo=parseFloat(prezzoEvento.value||0);
+let posti=parseInt(postiBus.value||0);
+
 if(!nome)return;
-eventi[nome]={tipo,prezzo,ordini:[]};
+
+eventi[nome]={
+tipo,
+prezzo,
+postiTotali: tipo==="bus"?posti:0,
+ordini:[]
+};
+
 salva();
 renderHome();
 }
 
-function eliminaEvento(n){
-if(confirm("Eliminare evento?")){
-delete eventi[n];
-salva();
-renderHome();
-}
-}
+/* ================= EVENTO ================= */
 
 function entraEvento(n){
 eventoCorrente=n;
@@ -221,15 +219,25 @@ let ev=eventi[eventoCorrente];
 app.innerHTML=`
 <div class="card">
 <h3>${eventoCorrente}</h3>
-Prezzo € ${ev.prezzo}<br><br>
-<input id="cliente" placeholder="Nome cliente"><br><br>
-
-<div id="formArea"></div>
-
-<button class="primary" id="btnSubmit" onclick="aggiungiOrdine()">Aggiungi</button>
-<button class="gray" id="btnCancel" style="display:none;" onclick="resetForm()">Annulla modifica</button>
+Prezzo € ${ev.prezzo}<br>
 <button onclick="renderHome()">Indietro</button>
+<button onclick="window.print()">🖨 Stampa</button>
 </div>
+
+<div class="card">
+<input id="cliente" placeholder="Nome cliente"><br>
+<select id="quantita">
+${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`)}
+</select><br>
+<button class="primary" onclick="aggiungiOrdine()">Aggiungi</button>
+</div>
+
+${ev.tipo==="bus"?`
+<div class="card">
+<h3>Posti Bus</h3>
+<div id="busInfo"></div>
+<div class="busBar"><div id="busFill" class="busFill"></div></div>
+</div>`:""}
 
 <div class="card">
 <h3>Ordini</h3>
@@ -237,144 +245,97 @@ Prezzo € ${ev.prezzo}<br><br>
 </div>
 
 <div class="card">
-<h3>Statistiche</h3>
-<div id="stats"></div>
+<h3>Riepilogo Ordini (A-Z)</h3>
+<div id="riepilogo"></div>
 </div>
 `;
 
-renderForm();
 aggiornaEvento();
 }
 
-function renderForm(){
-let ev=eventi[eventoCorrente];
-let html="";
-if(ev.tipo==="abbigliamento"){
-taglie.forEach(t=>{
-html+=`
-<div class="sizeRow">
-<label>${t}</label>
-<select id="q_${t}">
-${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`)}
-</select>
-</div>`;
-});
-}else{
-html=`
-<select id="q_obj">
-${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`)}
-</select>`;
-}
-formArea.innerHTML=html;
-}
+/* ================= ORDINI ================= */
 
 function aggiungiOrdine(){
 let ev=eventi[eventoCorrente];
 let nome=cliente.value;
-if(!nome)return;
+let q=parseInt(quantita.value);
 
-let dettagli={},tot=0;
+if(!nome||q<=0)return;
 
-if(ev.tipo==="abbigliamento"){
-taglie.forEach(t=>{
-let q=parseInt(document.getElementById("q_"+t)?.value||0);
-if(q>0){dettagli[t]=q;tot+=q*ev.prezzo;}
-});
-}else{
-let q=parseInt(document.getElementById("q_obj").value);
-if(q>0){dettagli["pezzi"]=q;tot+=q*ev.prezzo;}
+if(ev.tipo==="bus"){
+let prenotati=ev.ordini.reduce((t,o)=>t+o.q,0);
+if(prenotati+q>ev.postiTotali){
+alert("Posti insufficienti!");
+return;
+}
 }
 
-if(indiceModifica!==null){
-ev.ordini[indiceModifica]={nome,dettagli,tot,pagato:ev.ordini[indiceModifica].pagato};
-indiceModifica=null;
-}else{
-ev.ordini.push({nome,dettagli,tot,pagato:false});
-}
-
+ev.ordini.push({nome,q,pagato:false});
 salva();
-resetForm();
 aggiornaEvento();
 }
 
-function resetForm(){
-cliente.value="";
-renderForm();
-btnSubmit.innerText="Aggiungi";
-btnCancel.style.display="none";
-indiceModifica=null;
-document.querySelectorAll(".row").forEach(r=>r.classList.remove("editing"));
-}
+/* ================= UPDATE ================= */
 
 function aggiornaEvento(){
 let ev=eventi[eventoCorrente];
 
-listaOrdini.innerHTML=ev.ordini.map((o,i)=>`
-<div class="row ${indiceModifica===i?"editing":""}">
+let prenotati=0;
+listaOrdini.innerHTML=ev.ordini.map((o,i)=>{
+prenotati+=o.q;
+return `
+<div class="row">
 <div class="orderTop">${o.nome}</div>
 <div class="orderBottom">
-<div>${Object.entries(o.dettagli).map(([k,v])=>`${v} ${k}`).join(" ")}</div>
-<div>€ ${o.tot} <br> 
-<span style="color:${o.pagato?"#34c759":"#ff3b30"};">
+<div>${o.q} pezzi</div>
+<div>
+<span class="${o.pagato?"statusPaid":"statusUnpaid"}">
 ${o.pagato?"PAGATO":"NON PAGATO"}
 </span>
 </div>
 </div>
-<button onclick="modificaOrdine(${i})">✏️</button>
+<button onclick="togglePagato(${i})">Toggle</button>
 <button class="red" onclick="eliminaOrdine(${i})">🗑</button>
-<button class="${o.pagato?"green":"gray"}" onclick="togglePagato(${i})">
-${o.pagato?"✔":"Paga"}
-</button>
+</div>`;
+}).join("");
+
+if(ev.tipo==="bus"){
+busInfo.innerHTML=`
+Totali: ${ev.postiTotali}<br>
+Prenotati: ${prenotati}<br>
+Disponibili: ${ev.postiTotali-prenotati}
+`;
+busFill.style.width=((prenotati/ev.postiTotali)*100)+"%";
+}
+
+let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
+riepilogo.innerHTML=ordinati.map(o=>`
+<div class="row">
+<div class="orderTop">${o.nome}</div>
+<div class="orderBottom">
+<div>${o.q} pezzi</div>
+<div>
+<span class="${o.pagato?"statusPaid":"statusUnpaid"}">
+${o.pagato?"PAGATO":"NON PAGATO"}
+</span>
+</div>
+</div>
 </div>
 `).join("");
-
-let totInc=0,totNon=0;
-ev.ordini.forEach(o=>{
-if(o.pagato)totInc+=o.tot;
-else totNon+=o.tot;
-});
-stats.innerHTML=`
-Incassato € ${totInc}<br>
-Da incassare € ${totNon}
-`;
 }
 
-function modificaOrdine(i){
-indiceModifica=i;
-let o=eventi[eventoCorrente].ordini[i];
-cliente.value=o.nome;
-renderForm();
-
-for(let k in o.dettagli){
-let el=document.getElementById("q_"+k)||document.getElementById("q_obj");
-if(el)el.value=o.dettagli[k];
-}
-
-btnSubmit.innerText="Salva Modifica";
-btnCancel.style.display="inline-block";
-
-document.querySelectorAll(".row").forEach(r=>r.classList.remove("editing"));
-document.querySelectorAll(".row")[i].classList.add("editing");
-
-window.scrollTo({top:0,behavior:"smooth"});
+function togglePagato(i){
+eventi[eventoCorrente].ordini[i].pagato=
+!eventi[eventoCorrente].ordini[i].pagato;
+salva();aggiornaEvento();
 }
 
 function eliminaOrdine(i){
 eventi[eventoCorrente].ordini.splice(i,1);
-salva();
-aggiornaEvento();
+salva();aggiornaEvento();
 }
 
-function togglePagato(i){
-let o=eventi[eventoCorrente].ordini[i];
-o.pagato=!o.pagato;
-salva();
-aggiornaEvento();
-}
-
-function toggleDark(){
-document.body.classList.toggle("dark");
-}
+function toggleDark(){document.body.classList.toggle("dark");}
 
 renderLogin();
 
