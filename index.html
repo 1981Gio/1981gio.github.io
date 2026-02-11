@@ -23,14 +23,28 @@ padding:16px;
 border-radius:16px;
 margin-bottom:16px;
 box-shadow:0 6px 18px rgba(0,0,0,0.08);
+transition:all .3s ease;
 }
 
-button{
+.row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:14px;
 padding:10px;
-border:none;
 border-radius:12px;
-font-size:14px;
-margin-top:6px;
+transition:all .3s ease;
+}
+
+.row:hover{background:rgba(0,0,0,0.05);}
+.row.editing{background:#ffe082;}
+
+button{
+padding:8px 10px;
+border:none;
+border-radius:10px;
+font-size:13px;
+margin-left:4px;
 }
 
 .primary{background:#0A84FF;color:white;}
@@ -42,15 +56,6 @@ padding:8px;
 margin-bottom:8px;
 border-radius:10px;
 border:1px solid #ccc;
-}
-
-.row{
-display:flex;
-gap:8px;
-align-items:center;
-margin-bottom:14px;
-padding-bottom:8px;
-border-bottom:1px solid #e5e5ea;
 }
 
 .switch{position:relative;width:44px;height:24px;}
@@ -69,15 +74,8 @@ transition:.3s;
 input:checked + .slider{background:#34c759;}
 input:checked + .slider:before{transform:translateX(20px);}
 
-.stat-box{
+.stat-box,.summary-box{
 background:#e9f1ff;
-padding:10px;
-border-radius:10px;
-margin-bottom:6px;
-}
-
-.summary-box{
-background:#f4f4f6;
 padding:10px;
 border-radius:10px;
 margin-bottom:6px;
@@ -118,15 +116,9 @@ function renderLogin(){
 login.innerHTML=`
 <div class="card" style="text-align:center;">
 <h2>GiOrders Pro</h2>
-
-<div id="dots" style="font-size:28px;letter-spacing:10px;margin:20px 0;">
-○ ○ ○ ○
-</div>
-
+<div id="dots" style="font-size:28px;letter-spacing:10px;margin:20px 0;">○ ○ ○ ○</div>
 <div class="pin-grid">
-${[1,2,3,4,5,6,7,8,9].map(n=>`
-<button onclick="digita(${n})">${n}</button>
-`).join("")}
+${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="digita(${n})">${n}</button>`).join("")}
 <button onclick="cancella()">⌫</button>
 <button onclick="digita(0)">0</button>
 <button onclick="resetPin()">Reset</button>
@@ -138,26 +130,12 @@ function digita(n){
 if(pinValue.length>=4)return;
 pinValue+=n;
 aggiornaDots();
-if(pinValue.length===4){
-setTimeout(controllaPIN,200);
-}
-}
-
-function cancella(){
-pinValue=pinValue.slice(0,-1);
-aggiornaDots();
-}
-
-function resetPin(){
-pinValue="";
-aggiornaDots();
+if(pinValue.length===4)setTimeout(controllaPIN,200);
 }
 
 function aggiornaDots(){
 let out="";
-for(let i=0;i<4;i++){
-out+= i<pinValue.length ? "● " : "○ ";
-}
+for(let i=0;i<4;i++)out+=i<pinValue.length?"● ":"○ ";
 document.getElementById("dots").innerHTML=out;
 }
 
@@ -173,12 +151,13 @@ aggiornaDots();
 }
 }
 
+function cancella(){pinValue=pinValue.slice(0,-1);aggiornaDots();}
+function resetPin(){pinValue="";aggiornaDots();}
 function cambiaPIN(){
-let nuovo=prompt("Nuovo PIN (4 cifre)");
+let nuovo=prompt("Nuovo PIN");
 if(nuovo && nuovo.length>=4){
 savedPIN=nuovo;
 localStorage.setItem("gi_pin",nuovo);
-alert("PIN aggiornato");
 }
 }
 
@@ -187,21 +166,19 @@ alert("PIN aggiornato");
 let eventi=JSON.parse(localStorage.getItem("gi_eventi"))||{};
 let eventoCorrente=null;
 let taglie=["XS","S","M","L","XL","XXL"];
+let indiceModifica=null;
 
-function salva(){
-localStorage.setItem("gi_eventi",JSON.stringify(eventi));
-}
+function salva(){localStorage.setItem("gi_eventi",JSON.stringify(eventi));}
 
 /* ================= HOME ================= */
 
 function renderHome(){
-
-let html=`
+app.innerHTML=`
 <div class="card">
-<button onclick="toggleDark()">🌙 Modalità</button>
-<button onclick="cambiaPIN()">🔐 Cambia PIN</button>
-<button onclick="esportaBackup()">💾 Backup</button>
-<button onclick="importaBackup()">📥 Importa</button>
+<button onclick="toggleDark()">🌙</button>
+<button onclick="cambiaPIN()">🔐</button>
+<button onclick="esportaBackup()">💾</button>
+<button onclick="importaBackup()">📥</button>
 <input type="file" id="fileImport" style="display:none" onchange="leggiBackup(event)">
 <h3>Crea Evento</h3>
 <input id="nomeEvento" placeholder="Nome Evento">
@@ -209,23 +186,16 @@ let html=`
 <option value="maglia">Abbigliamento</option>
 <option value="oggetto">Gadget</option>
 </select>
-<input type="number" id="prezzoEvento" placeholder="Prezzo fisso €">
+<input type="number" id="prezzoEvento" placeholder="Prezzo €">
 <button class="primary" onclick="creaEvento()">Crea</button>
 </div>
-
-<div class="card"><h3>Eventi</h3>
-`;
-
-for(let nome in eventi){
-html+=`
+<div class="card">
+${Object.keys(eventi).map(n=>`
 <div class="row">
-<button style="flex:1" onclick="apriEvento('${nome}')">${nome}</button>
-<button class="red" onclick="eliminaEvento('${nome}')">X</button>
+<button onclick="apriEvento('${n}')">${n}</button>
+<button class="red" onclick="eliminaEvento('${n}')">X</button>
+</div>`).join("")}
 </div>`;
-}
-
-html+=`</div>`;
-app.innerHTML=html;
 }
 
 function creaEvento(){
@@ -238,66 +208,57 @@ salva();
 renderHome();
 }
 
-function eliminaEvento(nome){
+function eliminaEvento(n){
 if(confirm("Eliminare evento?")){
-delete eventi[nome];
+delete eventi[n];
 salva();
 renderHome();
 }
 }
 
-function apriEvento(nome){
-eventoCorrente=nome;
+function apriEvento(n){
+eventoCorrente=n;
 renderEvento();
 }
 
 /* ================= EVENTO ================= */
 
 function renderEvento(){
-
 let ev=eventi[eventoCorrente];
 
-let html=`
+app.innerHTML=`
 <div class="card">
-<button onclick="renderHome()">← Torna</button>
+<button onclick="renderHome()">←</button>
 <h3>${eventoCorrente}</h3>
-<p><strong>Prezzo:</strong> € ${ev.prezzo}</p>
+<p>Prezzo € ${ev.prezzo}</p>
 </div>
 
-<div class="card">
+<div class="card" id="formCard">
 <input id="cliente" placeholder="Nome Cliente">
-`;
-
-if(ev.tipo==="maglia"){
-taglie.forEach(t=>{
-html+=`
+${ev.tipo==="maglia"
+? taglie.map(t=>`
 <div class="row">
-<div style="flex:1">${t}</div>
-<select id="q_${t}" style="flex:1">
+<div>${t}</div>
+<select id="q_${t}">
 <option value="0">0</option>
 ${[1,2,3,4,5,6,7,8,9].map(n=>`<option>${n}</option>`).join("")}
 </select>
-</div>`;
-});
-}else{
-html+=`
-<select id="q_obj">
+</div>`).join("")
+: `<select id="q_obj">
 <option value="0">Quantità</option>
 ${[1,2,3,4,5,6,7,8,9].map(n=>`<option>${n}</option>`).join("")}
-</select>`;
+</select>`
 }
-
-html+=`
-<button class="primary" onclick="aggiungiOrdine()">Aggiungi</button>
+<button class="primary" id="btnSubmit" onclick="aggiungiOrdine()">Aggiungi</button>
+<button id="btnCancel" style="display:none;" onclick="annullaModifica()">Annulla modifica</button>
 </div>
 
 <div class="card"><h3>Ordini</h3><div id="listaOrdini"></div></div>
 <div class="card"><h3>Statistiche</h3><div id="stats"></div></div>
-<div class="card"><h3>📋 Riepilogo Ordini (A-Z)</h3><div id="riepilogoAlfabetico"></div></div>
+<div class="card"><h3>📋 Riepilogo Ordini</h3><div id="riepilogo"></div></div>
 <button onclick="window.print()">🖨 Stampa</button>
 `;
 
-app.innerHTML=html;
 aggiornaEvento();
 }
 
@@ -311,110 +272,50 @@ let dettagli={},totale=0;
 if(ev.tipo==="maglia"){
 taglie.forEach(t=>{
 let q=parseInt(document.getElementById("q_"+t).value);
-if(q>0){
-dettagli[t]=q;
-totale+=q*ev.prezzo;
-document.getElementById("q_"+t).value="0";
-}
+if(q>0){dettagli[t]=q;totale+=q*ev.prezzo;}
 });
 }else{
 let q=parseInt(q_obj.value);
-if(q>0){
-dettagli["pezzi"]=q;
-totale+=q*ev.prezzo;
-q_obj.value="0";
-}
+if(q>0){dettagli["pezzi"]=q;totale+=q*ev.prezzo;}
 }
 
-cliente.value="";
+if(indiceModifica!==null){
+ev.ordini[indiceModifica]={nome,dettagli,totale,pagato:ev.ordini[indiceModifica].pagato};
+indiceModifica=null;
+}else{
 ev.ordini.push({nome,dettagli,totale,pagato:false});
+}
+
 salva();
+resetForm();
 aggiornaEvento();
 }
 
-function aggiornaEvento(){
-
-let ev=eventi[eventoCorrente];
-let lista=document.getElementById("listaOrdini");
-let stats=document.getElementById("stats");
-let riepilogo=document.getElementById("riepilogoAlfabetico");
-
-lista.innerHTML="";
-riepilogo.innerHTML="";
-
-let inc=0,nonInc=0,totPezzi=0;
-let riepilogoTaglie={};
-
-ev.ordini.forEach((o,i)=>{
-
-if(o.pagato)inc+=o.totale;else nonInc+=o.totale;
-
-let dettagliTesto="";
-for(let k in o.dettagli){
-totPezzi+=o.dettagli[k];
-dettagliTesto+=o.dettagli[k]+" "+k+" ";
-if(ev.tipo==="maglia")
-riepilogoTaglie[k]=(riepilogoTaglie[k]||0)+o.dettagli[k];
+function resetForm(){
+cliente.value="";
+taglie.forEach(t=>{let el=document.getElementById("q_"+t);if(el)el.value=0;});
+if(document.getElementById("q_obj"))q_obj.value=0;
+btnSubmit.innerText="Aggiungi";
+btnCancel.style.display="none";
 }
 
-lista.innerHTML+=`
-<div class="row">
-<div style="flex:1">
-<strong>${o.nome}</strong><br>
-<small>${dettagliTesto} - € ${o.totale}</small>
-</div>
-<button onclick="modificaOrdine(${i})">✏️</button>
-<button class="red" onclick="eliminaOrdine(${i})">🗑</button>
-<label class="switch">
-<input type="checkbox" ${o.pagato?'checked':''}
-onchange="togglePagato(${i})">
-<span class="slider"></span>
-</label>
-</div>`;
-});
-
-/* STAT */
-
-let media = ev.ordini.length? (inc+nonInc)/ev.ordini.length:0;
-let percentPagato = (inc+nonInc)? ((inc/(inc+nonInc))*100).toFixed(1):0;
-
-let statHTML=`
-<div class="stat-box">Totale pezzi: ${totPezzi}</div>
-<div class="stat-box">Ordini: ${ev.ordini.length}</div>
-<div class="stat-box">Incassato: € ${inc}</div>
-<div class="stat-box">Da incassare: € ${nonInc}</div>
-<div class="stat-box">Media € per cliente: € ${media.toFixed(2)}</div>
-<div class="stat-box">Percentuale pagato: ${percentPagato}%</div>
-`;
-
-for(let t in riepilogoTaglie){
-statHTML+=`<div class="stat-box">Totale ${t}: ${riepilogoTaglie[t]}</div>`;
+function modificaOrdine(i){
+indiceModifica=i;
+let o=eventi[eventoCorrente].ordini[i];
+cliente.value=o.nome;
+taglie.forEach(t=>{let el=document.getElementById("q_"+t);if(el)el.value=o.dettagli[t]||0;});
+if(document.getElementById("q_obj"))q_obj.value=o.dettagli["pezzi"]||0;
+btnSubmit.innerText="Salva Modifica";
+btnCancel.style.display="inline-block";
+document.querySelectorAll(".row").forEach(r=>r.classList.remove("editing"));
+document.querySelectorAll(".row")[i].classList.add("editing");
+window.scrollTo({top:0,behavior:'smooth'});
 }
 
-stats.innerHTML=statHTML;
-
-/* RIEPILOGO A-Z */
-
-let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
-ordinati.forEach(o=>{
-let dettagliTesto="";
-for(let k in o.dettagli){
-dettagliTesto+=o.dettagli[k]+" "+k+" ";
-}
-riepilogo.innerHTML+=`
-<div class="summary-box">
-<strong>${o.nome}</strong><br>
-${dettagliTesto}<br>
-€ ${o.totale} - ${o.pagato?"PAGATO":"NON PAGATO"}
-</div>`;
-});
-}
-
-function togglePagato(i){
-eventi[eventoCorrente].ordini[i].pagato=
-!eventi[eventoCorrente].ordini[i].pagato;
-salva();
-aggiornaEvento();
+function annullaModifica(){
+indiceModifica=null;
+resetForm();
+document.querySelectorAll(".row").forEach(r=>r.classList.remove("editing"));
 }
 
 function eliminaOrdine(i){
@@ -425,19 +326,69 @@ aggiornaEvento();
 }
 }
 
-function modificaOrdine(i){
-let ordine=eventi[eventoCorrente].ordini[i];
-let nuovoNome=prompt("Modifica nome:",ordine.nome);
-if(nuovoNome) ordine.nome=nuovoNome;
+function togglePagato(i){
+eventi[eventoCorrente].ordini[i].pagato=!eventi[eventoCorrente].ordini[i].pagato;
 salva();
 aggiornaEvento();
+}
+
+function aggiornaEvento(){
+let ev=eventi[eventoCorrente];
+let lista=document.getElementById("listaOrdini");
+let riepilogo=document.getElementById("riepilogo");
+let stats=document.getElementById("stats");
+
+lista.innerHTML="";
+riepilogo.innerHTML="";
+
+let inc=0,nonInc=0;
+
+ev.ordini.forEach((o,i)=>{
+if(o.pagato)inc+=o.totale;else nonInc+=o.totale;
+let dettagli=Object.entries(o.dettagli).map(([k,v])=>v+" "+k).join(" ");
+
+lista.innerHTML+=`
+<div class="row">
+<div>
+<strong>${o.nome}</strong><br>
+${dettagli}
+</div>
+<div style="text-align:right;">
+€ ${o.totale}<br>
+${o.pagato?"PAGATO":"NON PAGATO"}
+</div>
+<div>
+<button onclick="modificaOrdine(${i})">✏️</button>
+<button class="red" onclick="eliminaOrdine(${i})">🗑</button>
+<label class="switch">
+<input type="checkbox" ${o.pagato?'checked':''} onchange="togglePagato(${i})">
+<span class="slider"></span>
+</label>
+</div>
+</div>`;
+});
+
+stats.innerHTML=`
+<div class="stat-box">Incassato € ${inc}</div>
+<div class="stat-box">Da incassare € ${nonInc}</div>
+<div class="stat-box">Totale ordini ${ev.ordini.length}</div>
+`;
+
+let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
+ordinati.forEach(o=>{
+let dettagli=Object.entries(o.dettagli).map(([k,v])=>v+" "+k).join(" ");
+riepilogo.innerHTML+=`
+<div class="summary-box">
+<strong>${o.nome}</strong><br>
+${dettagli} — € ${o.totale} (${o.pagato?"PAGATO":"NON PAGATO"})
+</div>`;
+});
 }
 
 /* BACKUP */
 
 function esportaBackup(){
-let dati={eventi:eventi,pin:savedPIN};
-let blob=new Blob([JSON.stringify(dati)],{type:"application/json"});
+let blob=new Blob([JSON.stringify({eventi,pin:savedPIN})],{type:"application/json"});
 let url=URL.createObjectURL(blob);
 let a=document.createElement("a");
 a.href=url;
@@ -445,34 +396,24 @@ a.download="giorders_backup.json";
 a.click();
 }
 
-function importaBackup(){
-document.getElementById("fileImport").click();
-}
-
-function leggiBackup(event){
+function importaBackup(){fileImport.click();}
+function leggiBackup(e){
 let reader=new FileReader();
-reader.onload=function(e){
-let dati=JSON.parse(e.target.result);
-eventi=dati.eventi||{};
-savedPIN=dati.pin||"1926";
-localStorage.setItem("gi_eventi",JSON.stringify(eventi));
-localStorage.setItem("gi_pin",savedPIN);
-alert("Backup ripristinato");
+reader.onload=function(ev){
+let d=JSON.parse(ev.target.result);
+eventi=d.eventi||{};
+savedPIN=d.pin||"1926";
+salva();
 renderHome();
 };
-reader.readAsText(event.target.files[0]);
+reader.readAsText(e.target.files[0]);
 }
 
-function toggleDark(){
-document.body.classList.toggle("dark");
-}
+function toggleDark(){document.body.classList.toggle("dark");}
 
-if ('serviceWorker' in navigator) {
-navigator.serviceWorker.register('sw.js');
-}
+if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js');}
 
 renderLogin();
-
 </script>
 </body>
 </html>
