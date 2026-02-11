@@ -2,343 +2,397 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GiOrders Pro</title>
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0A84FF">
+<link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <style>
 body{
-margin:0;
-font-family:-apple-system;
-background:#f2f2f7;
-transition:.3s;
+  font-family:-apple-system,BlinkMacSystemFont;
+  margin:0;
+  background:#f2f2f7;
 }
-.dark{background:#1c1c1e;color:white;}
+.dark body{background:#0f172a;color:white}
 
 .card{
-background:white;
-margin:15px;
-padding:15px;
-border-radius:16px;
-box-shadow:0 4px 12px rgba(0,0,0,.1);
-transition:.3s;
+  background:white;
+  padding:15px;
+  margin:15px;
+  border-radius:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
 }
-.dark .card{background:#2c2c2e;}
+.dark .card{background:#1e293b}
+
+h2{margin-top:0}
 
 button{
-padding:8px 12px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-margin:3px 0;
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  margin:4px;
+  cursor:pointer;
 }
 
-.primary{background:#0A84FF;color:white;}
-.red{background:#ff3b30;color:white;}
-.green{background:#34c759;color:white;}
-.gray{background:#d1d1d6;}
+.primary{background:#0A84FF;color:white}
+.red{background:#ff3b30;color:white}
+.green{background:#34c759;color:white}
+.gray{background:#d1d1d6}
 
 input,select{
-padding:6px;
-border-radius:6px;
-border:1px solid #ccc;
-margin-bottom:8px;
+  padding:6px;
+  border-radius:8px;
+  border:1px solid #ccc;
 }
 
 .row{
-margin-bottom:12px;
-padding:12px;
-border-radius:12px;
-background:#f9f9fb;
-transition:.3s;
-}
-.dark .row{background:#3a3a3c;}
-.editing{background:#fff3cd !important;}
-
-.orderTop{
-font-weight:bold;
-font-size:16px;
-margin-bottom:4px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
 }
 
-.orderBottom{
-display:flex;
-justify-content:space-between;
-font-size:14px;
+.highlight{background:#fff9c4}
+
+.pin-screen{
+  position:fixed;
+  inset:0;
+  background:#0f172a;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  color:white;
 }
 
-.statusPaid{color:#34c759;font-weight:bold;}
-.statusUnpaid{color:#ff3b30;font-weight:bold;}
-
-.busBar{
-height:18px;
-background:#e5e5ea;
-border-radius:10px;
-overflow:hidden;
-margin-top:6px;
-}
-.busFill{
-height:100%;
-background:#0A84FF;
-width:0%;
-transition:.4s;
+.pin-display{
+  font-size:32px;
+  letter-spacing:10px;
+  margin-bottom:20px;
 }
 
-.pinPad button{
-font-size:20px;
-padding:15px;
+.keypad{
+  display:grid;
+  grid-template-columns:repeat(3,70px);
+  gap:10px;
 }
 
-@media print{
-button{display:none;}
-body{background:white;}
+.keypad button{
+  font-size:20px;
+  padding:15px;
+  background:#1e293b;
+  color:white;
 }
+
+.hidden{display:none}
+
+.order-line{
+  padding:8px 0;
+  border-bottom:1px solid #ddd;
+}
+
+.status{
+  font-weight:bold;
+}
+
+.paid{color:#34c759}
+.unpaid{color:#ff3b30}
+
+.bus-counter{
+  font-weight:bold;
+  margin-top:10px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div id="login"></div>
-<div id="app" style="display:none;"></div>
+<div id="pinScreen" class="pin-screen">
+<h2>Inserisci PIN</h2>
+<div id="pinDisplay" class="pin-display">----</div>
+<div class="keypad">
+<button onclick="press(1)">1</button>
+<button onclick="press(2)">2</button>
+<button onclick="press(3)">3</button>
+<button onclick="press(4)">4</button>
+<button onclick="press(5)">5</button>
+<button onclick="press(6)">6</button>
+<button onclick="press(7)">7</button>
+<button onclick="press(8)">8</button>
+<button onclick="press(9)">9</button>
+<button onclick="clearPin()">C</button>
+<button onclick="press(0)">0</button>
+<button onclick="checkPin()">OK</button>
+</div>
+</div>
+
+<div id="app" class="hidden">
+
+<div class="card">
+<h2>Eventi</h2>
+<input id="newEventName" placeholder="Nome evento">
+<select id="eventType">
+<option>Abbigliamento</option>
+<option>Gadget</option>
+<option>Bus</option>
+</select>
+<input id="eventPrice" type="number" placeholder="Prezzo €">
+<button class="primary" onclick="createEvent()">Nuovo Evento</button>
+<div id="eventList"></div>
+</div>
+
+<div id="eventSection" class="hidden">
+
+<div class="card">
+<h2 id="eventTitle"></h2>
+<input id="customerName" placeholder="Nome">
+
+<div id="sizesSection"></div>
+
+<label>Pagato</label>
+<input type="checkbox" id="paidCheck">
+
+<br><br>
+<button class="primary" onclick="saveOrder()">Salva</button>
+<button class="gray" onclick="cancelEdit()">Annulla</button>
+</div>
+
+<div class="card">
+<h2>Ordini</h2>
+<div id="orders"></div>
+</div>
+
+<div class="card">
+<h2>Riepilogo Ordini</h2>
+<div id="summary"></div>
+<button onclick="window.print()">Stampa</button>
+</div>
+
+</div>
+
+</div>
 
 <script>
+let pin="1926";
+let inputPin="";
+let events=JSON.parse(localStorage.getItem("events")||"[]");
+let currentEvent=null;
+let editingIndex=null;
 
-/* ================= CORE ================= */
-
-let savedPIN = localStorage.getItem("pin") || "1926";
-let eventi = JSON.parse(localStorage.getItem("eventi")||"{}");
-let eventoCorrente = null;
-let indiceModifica = null;
-let taglie = ["XS","S","M","L","XL","XXL"];
-
-function salva(){
-localStorage.setItem("eventi",JSON.stringify(eventi));
+function press(n){
+ if(inputPin.length<4){
+   inputPin+=n;
+   updateDisplay();
+ }
 }
 
-/* ================= PIN ================= */
-
-let pinInput="";
-
-function renderLogin(){
-login.innerHTML=`
-<div class="card" style="text-align:center;">
-<h2>GiOrders Pro</h2>
-<div id="dots" style="font-size:28px;letter-spacing:8px;margin:20px;">○ ○ ○ ○</div>
-<div class="pinPad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="digit(${n})">${n}</button>`).join("")}
-<button onclick="del()">⌫</button>
-<button onclick="digit(0)">0</button>
-<button onclick="clearPin()">C</button>
-</div>
-</div>`;
+function clearPin(){
+ inputPin="";
+ updateDisplay();
 }
 
-function digit(n){
-if(pinInput.length>=4)return;
-pinInput+=n;updateDots();
-if(pinInput.length===4)setTimeout(checkPin,200);
+function updateDisplay(){
+ document.getElementById("pinDisplay").innerText=
+ inputPin.padEnd(4,"-");
 }
-function del(){pinInput=pinInput.slice(0,-1);updateDots();}
-function clearPin(){pinInput="";updateDots();}
-function updateDots(){
-dots.innerHTML=[0,1,2,3].map(i=>i<pinInput.length?"●":"○").join(" ");
-}
+
 function checkPin(){
-if(pinInput===savedPIN){
-login.style.display="none";
-app.style.display="block";
-renderHome();
-}else{
-alert("PIN errato");pinInput="";updateDots();
-}
-}
-
-/* ================= HOME ================= */
-
-function renderHome(){
-app.innerHTML=`
-<div class="card">
-<h3>Nuovo Evento</h3>
-<input id="nomeEvento" placeholder="Nome evento"><br>
-<select id="tipoEvento">
-<option value="abbigliamento">Abbigliamento</option>
-<option value="gadget">Gadget</option>
-<option value="bus">Bus</option>
-</select><br>
-<input id="prezzoEvento" type="number" placeholder="Prezzo unitario"><br>
-<input id="postiBus" type="number" placeholder="Posti totali (solo Bus)"><br>
-<button class="primary" onclick="creaEvento()">Crea Evento</button>
-<button onclick="toggleDark()">🌙</button>
-</div>
-
-${Object.keys(eventi).map(e=>`
-<div class="card">
-<b>${e}</b><br>
-<button onclick="entraEvento('${e}')">Apri</button>
-<button class="red" onclick="eliminaEvento('${e}')">Elimina</button>
-</div>
-`).join("")}
-`;
+ if(inputPin===pin){
+   document.getElementById("pinScreen").classList.add("hidden");
+   document.getElementById("app").classList.remove("hidden");
+   renderEvents();
+ }
+ else alert("PIN errato");
 }
 
-function creaEvento(){
-let nome=nomeEvento.value;
-let tipo=tipoEvento.value;
-let prezzo=parseFloat(prezzoEvento.value||0);
-let posti=parseInt(postiBus.value||0);
-
-if(!nome)return;
-
-eventi[nome]={
-tipo,
-prezzo,
-postiTotali: tipo==="bus"?posti:0,
-ordini:[]
-};
-
-salva();
-renderHome();
+function createEvent(){
+ let name=document.getElementById("newEventName").value;
+ let type=document.getElementById("eventType").value;
+ let price=parseFloat(document.getElementById("eventPrice").value);
+ if(!name||!price)return;
+ events.push({name,type,price,orders:[]});
+ save();
+ renderEvents();
 }
 
-/* ================= EVENTO ================= */
-
-function entraEvento(n){
-eventoCorrente=n;
-renderEvento();
+function renderEvents(){
+ let list=document.getElementById("eventList");
+ list.innerHTML="";
+ events.forEach((e,i)=>{
+   list.innerHTML+=`
+   <div class="row">
+   <span onclick="openEvent(${i})">${e.name}</span>
+   <button class="red" onclick="deleteEvent(${i})">X</button>
+   </div>`;
+ });
 }
 
-function renderEvento(){
-let ev=eventi[eventoCorrente];
-
-app.innerHTML=`
-<div class="card">
-<h3>${eventoCorrente}</h3>
-Prezzo € ${ev.prezzo}<br>
-<button onclick="renderHome()">Indietro</button>
-<button onclick="window.print()">🖨 Stampa</button>
-</div>
-
-<div class="card">
-<input id="cliente" placeholder="Nome cliente"><br>
-<select id="quantita">
-${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`)}
-</select><br>
-<button class="primary" onclick="aggiungiOrdine()">Aggiungi</button>
-</div>
-
-${ev.tipo==="bus"?`
-<div class="card">
-<h3>Posti Bus</h3>
-<div id="busInfo"></div>
-<div class="busBar"><div id="busFill" class="busFill"></div></div>
-</div>`:""}
-
-<div class="card">
-<h3>Ordini</h3>
-<div id="listaOrdini"></div>
-</div>
-
-<div class="card">
-<h3>Riepilogo Ordini (A-Z)</h3>
-<div id="riepilogo"></div>
-</div>
-`;
-
-aggiornaEvento();
+function deleteEvent(i){
+ if(confirm("Eliminare evento?")){
+   events.splice(i,1);
+   save();
+   renderEvents();
+ }
 }
 
-/* ================= ORDINI ================= */
-
-function aggiungiOrdine(){
-let ev=eventi[eventoCorrente];
-let nome=cliente.value;
-let q=parseInt(quantita.value);
-
-if(!nome||q<=0)return;
-
-if(ev.tipo==="bus"){
-let prenotati=ev.ordini.reduce((t,o)=>t+o.q,0);
-if(prenotati+q>ev.postiTotali){
-alert("Posti insufficienti!");
-return;
-}
+function openEvent(i){
+ currentEvent=i;
+ document.getElementById("eventSection").classList.remove("hidden");
+ document.getElementById("eventTitle").innerText=events[i].name+" - €"+events[i].price;
+ renderSizes();
+ renderOrders();
 }
 
-ev.ordini.push({nome,q,pagato:false});
-salva();
-aggiornaEvento();
+function renderSizes(){
+ let section=document.getElementById("sizesSection");
+ section.innerHTML="";
+ let type=events[currentEvent].type;
+
+ if(type==="Abbigliamento"){
+   ["XS","S","M","L","XL","XXL"].forEach(s=>{
+     section.innerHTML+=`
+     <div class="row">
+     <span>${s}</span>
+     <select id="size_${s}">
+     ${[...Array(11).keys()].map(n=>`<option>${n}</option>`).join("")}
+     </select>
+     </div>`;
+   });
+ }
+ else if(type==="Gadget"){
+   section.innerHTML+=`
+   <div class="row">
+   <span>Quantità</span>
+   <select id="size_Q">
+   ${[...Array(21).keys()].map(n=>`<option>${n}</option>`).join("")}
+   </select>
+   </div>`;
+ }
+ else if(type==="Bus"){
+   section.innerHTML+=`
+   <div class="row">
+   <span>Posti</span>
+   <select id="size_Q">
+   ${[...Array(51).keys()].map(n=>`<option>${n}</option>`).join("")}
+   </select>
+   </div>
+   <div class="bus-counter" id="busCounter"></div>`;
+ }
 }
 
-/* ================= UPDATE ================= */
+function saveOrder(){
+ let name=document.getElementById("customerName").value;
+ if(!name)return;
 
-function aggiornaEvento(){
-let ev=eventi[eventoCorrente];
+ let type=events[currentEvent].type;
+ let data={name,paid:document.getElementById("paidCheck").checked,sizes:{}};
+ let total=0;
 
-let prenotati=0;
-listaOrdini.innerHTML=ev.ordini.map((o,i)=>{
-prenotati+=o.q;
-return `
-<div class="row">
-<div class="orderTop">${o.nome}</div>
-<div class="orderBottom">
-<div>${o.q} pezzi</div>
-<div>
-<span class="${o.pagato?"statusPaid":"statusUnpaid"}">
-${o.pagato?"PAGATO":"NON PAGATO"}
-</span>
-</div>
-</div>
-<button onclick="togglePagato(${i})">Toggle</button>
-<button class="red" onclick="eliminaOrdine(${i})">🗑</button>
-</div>`;
-}).join("");
+ if(type==="Abbigliamento"){
+   ["XS","S","M","L","XL","XXL"].forEach(s=>{
+     let q=parseInt(document.getElementById("size_"+s).value);
+     if(q>0){data.sizes[s]=q; total+=q;}
+   });
+ }
+ else{
+   let q=parseInt(document.getElementById("size_Q").value);
+   if(q>0){data.sizes["Q"]=q; total+=q;}
+ }
 
-if(ev.tipo==="bus"){
-busInfo.innerHTML=`
-Totali: ${ev.postiTotali}<br>
-Prenotati: ${prenotati}<br>
-Disponibili: ${ev.postiTotali-prenotati}
-`;
-busFill.style.width=((prenotati/ev.postiTotali)*100)+"%";
+ data.total=total*events[currentEvent].price;
+
+ if(editingIndex!==null){
+   events[currentEvent].orders[editingIndex]=data;
+   editingIndex=null;
+ }
+ else events[currentEvent].orders.push(data);
+
+ save();
+ renderOrders();
+ renderSummary();
+ document.getElementById("customerName").value="";
+ document.getElementById("paidCheck").checked=false;
+ renderSizes();
 }
 
-let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
-riepilogo.innerHTML=ordinati.map(o=>`
-<div class="row">
-<div class="orderTop">${o.nome}</div>
-<div class="orderBottom">
-<div>${o.q} pezzi</div>
-<div>
-<span class="${o.pagato?"statusPaid":"statusUnpaid"}">
-${o.pagato?"PAGATO":"NON PAGATO"}
-</span>
-</div>
-</div>
-</div>
-`).join("");
+function renderOrders(){
+ let container=document.getElementById("orders");
+ container.innerHTML="";
+ events[currentEvent].orders.forEach((o,i)=>{
+   container.innerHTML+=`
+   <div class="order-line">
+   <div><strong>${o.name}</strong></div>
+   <div>${formatSizes(o)} &nbsp; € ${o.total}
+   <span class="status ${o.paid?'paid':'unpaid'}">
+   ${o.paid?'PAGATO':'NON PAGATO'}
+   </span>
+   </div>
+   <button onclick="editOrder(${i})">Modifica</button>
+   <button class="red" onclick="deleteOrder(${i})">Elimina</button>
+   </div>`;
+ });
 }
 
-function togglePagato(i){
-eventi[eventoCorrente].ordini[i].pagato=
-!eventi[eventoCorrente].ordini[i].pagato;
-salva();aggiornaEvento();
+function editOrder(i){
+ editingIndex=i;
+ let o=events[currentEvent].orders[i];
+ document.getElementById("customerName").value=o.name;
+ document.getElementById("paidCheck").checked=o.paid;
+ renderSizes();
+ for(let s in o.sizes){
+   let el=document.getElementById("size_"+s);
+   if(el) el.value=o.sizes[s];
+ }
+ window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function eliminaOrdine(i){
-eventi[eventoCorrente].ordini.splice(i,1);
-salva();aggiornaEvento();
+function deleteOrder(i){
+ events[currentEvent].orders.splice(i,1);
+ save();
+ renderOrders();
+ renderSummary();
 }
 
-function toggleDark(){document.body.classList.toggle("dark");}
+function renderSummary(){
+ let s=document.getElementById("summary");
+ let list=[...events[currentEvent].orders].sort((a,b)=>a.name.localeCompare(b.name));
+ s.innerHTML="";
+ list.forEach(o=>{
+   s.innerHTML+=`
+   <div class="order-line">
+   <strong>${o.name}</strong><br>
+   ${formatSizes(o)} &nbsp; € ${o.total}
+   <span class="${o.paid?'paid':'unpaid'}">
+   ${o.paid?'PAGATO':'NON PAGATO'}
+   </span>
+   </div>`;
+ });
+}
 
-renderLogin();
+function formatSizes(o){
+ return Object.entries(o.sizes)
+ .map(([k,v])=>`${v} ${k}`)
+ .join(" - ");
+}
 
+function cancelEdit(){
+ editingIndex=null;
+ document.getElementById("customerName").value="";
+ renderSizes();
+}
+
+function save(){
+ localStorage.setItem("events",JSON.stringify(events));
+}
+
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("sw.js");
+}
 </script>
+
 </body>
 </html>
