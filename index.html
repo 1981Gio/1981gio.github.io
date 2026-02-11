@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GiOrders</title>
+<title>GiOrders Pro</title>
 
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A84FF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
 
@@ -42,7 +44,6 @@ button{
 }
 .primary{background:#0A84FF;color:white;}
 .red{background:#ff3b30;color:white;}
-.green{background:#34c759;color:white;}
 input,select{
   width:100%;
   padding:8px;
@@ -52,44 +53,29 @@ input,select{
 }
 .row{display:flex;gap:8px;align-items:center;}
 .switch{
-  position:relative;
-  display:inline-block;
-  width:40px;
-  height:22px;
+  position:relative;width:40px;height:22px;
 }
-.switch input{opacity:0;width:0;height:0;}
+.switch input{display:none;}
 .slider{
-  position:absolute;
-  cursor:pointer;
-  top:0;left:0;right:0;bottom:0;
-  background-color:#ccc;
-  transition:.3s;
-  border-radius:22px;
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:#ccc;border-radius:22px;
 }
 .slider:before{
-  position:absolute;
-  content:"";
+  content:"";position:absolute;
   height:16px;width:16px;
   left:3px;bottom:3px;
-  background:white;
+  background:white;border-radius:50%;
   transition:.3s;
-  border-radius:50%;
 }
-input:checked + .slider{
-  background:#34c759;
-}
-input:checked + .slider:before{
-  transform:translateX(18px);
-}
+input:checked + .slider{background:#34c759;}
+input:checked + .slider:before{transform:translateX(18px);}
 .summary-box{
   background:#f4f4f6;
   padding:10px;
   border-radius:10px;
   margin-bottom:6px;
 }
-@media print{
-  button,.switch{display:none;}
-}
+@media print{button,.switch{display:none;}}
 </style>
 </head>
 
@@ -100,14 +86,14 @@ input:checked + .slider:before{
 
 <script>
 
-/* ================= PIN SYSTEM ================= */
+/* ================= PIN ================= */
 
 let savedPIN = localStorage.getItem("gi_pin") || "1234";
 
 function renderLogin(){
   login.innerHTML=`
   <div class="card">
-    <h3>Accesso GiOrders</h3>
+    <h3>Accesso GiOrders Pro</h3>
     <input type="password" id="pinInput" placeholder="Inserisci PIN">
     <button class="primary" onclick="checkPIN()">Accedi</button>
   </div>`;
@@ -118,13 +104,11 @@ function checkPIN(){
     login.style.display="none";
     app.style.display="block";
     renderHome();
-  }else{
-    alert("PIN errato");
-  }
+  }else alert("PIN errato");
 }
 
 function cambiaPIN(){
-  let nuovo = prompt("Inserisci nuovo PIN (min 4 cifre)");
+  let nuovo = prompt("Nuovo PIN (min 4 cifre)");
   if(nuovo && nuovo.length>=4){
     localStorage.setItem("gi_pin",nuovo);
     savedPIN=nuovo;
@@ -132,7 +116,7 @@ function cambiaPIN(){
   }
 }
 
-/* ================= APP CORE ================= */
+/* ================= CORE ================= */
 
 let eventi = JSON.parse(localStorage.getItem("gi_eventi")) || {};
 let eventoCorrente=null;
@@ -142,13 +126,11 @@ function salva(){
   localStorage.setItem("gi_eventi",JSON.stringify(eventi));
 }
 
-/* HOME */
-
 function renderHome(){
   let html=`
   <div class="card">
     <button onclick="toggleDark()">🌙 Modalità</button>
-    <button onclick="cambiaPIN()">🔐 Cambia PIN</button>
+    <button onclick="cambiaPIN()">🔐 PIN</button>
     <h3>Crea Evento</h3>
     <input id="nomeEvento" placeholder="Nome Evento">
     <select id="tipoEvento">
@@ -156,11 +138,10 @@ function renderHome(){
       <option value="oggetto">Gadget</option>
     </select>
     <input type="number" id="prezzoEvento" placeholder="Prezzo fisso €">
-    <button class="primary" onclick="creaEvento()">Crea Evento</button>
+    <button class="primary" onclick="creaEvento()">Crea</button>
   </div>
 
-  <div class="card">
-    <h3>Eventi</h3>
+  <div class="card"><h3>Eventi</h3>
   `;
 
   for(let nome in eventi){
@@ -186,7 +167,7 @@ function creaEvento(){
 }
 
 function eliminaEvento(nome){
-  if(confirm("Eliminare evento "+nome+" ?")){
+  if(confirm("Eliminare evento?")){
     delete eventi[nome];
     salva();
     renderHome();
@@ -198,8 +179,6 @@ function apriEvento(nome){
   renderEvento();
 }
 
-/* EVENTO */
-
 function renderEvento(){
   let ev=eventi[eventoCorrente];
 
@@ -207,11 +186,10 @@ function renderEvento(){
   <div class="card">
     <button onclick="renderHome()">← Torna</button>
     <h3>${eventoCorrente}</h3>
-    <p><strong>Prezzo:</strong> € ${ev.prezzo}</p>
+    <p>Prezzo: € ${ev.prezzo}</p>
   </div>
 
   <div class="card">
-    <h3>Nuovo Ordine</h3>
     <input id="cliente" placeholder="Nome Cliente">
   `;
 
@@ -238,21 +216,9 @@ function renderEvento(){
     <button class="primary" onclick="aggiungiOrdine()">Aggiungi</button>
   </div>
 
-  <div class="card">
-    <h3>Storico Ordini</h3>
-    <div id="listaOrdini"></div>
-  </div>
-
-  <div class="card">
-    <h3>Riepilogo Evento</h3>
-    <div id="riepilogo"></div>
-  </div>
-
-  <div class="card">
-    <h3>Riepilogo Ordini (Alfabetico)</h3>
-    <div id="riepilogoOrdini"></div>
-    <button class="primary" onclick="window.print()">Stampa Completa</button>
-  </div>
+  <div class="card"><h3>Ordini</h3><div id="listaOrdini"></div></div>
+  <div class="card"><h3>Riepilogo</h3><div id="riepilogo"></div>
+  <button onclick="window.print()">Stampa</button></div>
   `;
 
   app.innerHTML=html;
@@ -294,7 +260,6 @@ function aggiornaEvento(){
   let ev=eventi[eventoCorrente];
   let lista=document.getElementById("listaOrdini");
   let riepilogo=document.getElementById("riepilogo");
-  let riepilogoOrdini=document.getElementById("riepilogoOrdini");
 
   lista.innerHTML="";
   let inc=0,nonInc=0;
@@ -329,19 +294,6 @@ function aggiornaEvento(){
   }
 
   riepilogo.innerHTML=htmlR;
-
-  let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
-  riepilogoOrdini.innerHTML="";
-  ordinati.forEach(o=>{
-    let dettagli="";
-    for(let k in o.dettagli){
-      dettagli+=`${o.dettagli[k]} ${k} `;
-    }
-    riepilogoOrdini.innerHTML+=`
-      <div class="summary-box">
-        <strong>${o.nome}</strong> - ${dettagli}
-      </div>`;
-  });
 }
 
 function togglePagato(i){
@@ -353,6 +305,11 @@ function togglePagato(i){
 
 function toggleDark(){
   document.body.classList.toggle("dark");
+}
+
+/* SERVICE WORKER */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
 }
 
 renderLogin();
