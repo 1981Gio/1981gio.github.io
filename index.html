@@ -3,76 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GiOrders 12 - Event Manager Pro</title>
 
+<title>GiOrders</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="icon.png">
+<link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
 
 <style>
-body { font-family: -apple-system, sans-serif; background:#f2f2f7; padding:15px; }
+body { font-family:-apple-system,sans-serif; background:#f2f2f7; padding:15px;}
 h1 { text-align:center; color:#0A84FF; }
-.card { background:white; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 10px rgba(0,0,0,0.08);}
-select, input { width:100%; padding:8px; margin:5px 0; border-radius:8px; border:1px solid #ccc;}
-button { padding:8px 12px; border:none; border-radius:8px; margin:4px 0;}
+
+.card {
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  margin-bottom:15px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+.row {
+  display:flex;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.small-select {
+  flex:1;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button {
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  margin-top:8px;
+}
+
 .primary { background:#0A84FF; color:white; }
 .red { background:#ff3b30; color:white; }
 .green { background:#34c759; color:white; }
-.small { font-size:12px; padding:5px 8px; }
-.order-line { font-size:13px; padding:5px 0; border-bottom:1px solid #eee; }
-.total-box { background:#e9f5ff; padding:10px; border-radius:10px; margin-top:10px;}
-@media print { button { display:none; } body { background:white; } }
+
+.order-line {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:13px;
+  padding:8px 0;
+  border-bottom:1px solid #eee;
+}
+
+.badge {
+  padding:4px 8px;
+  border-radius:12px;
+  font-size:11px;
+  color:white;
+}
+
+.badge.green { background:#34c759; }
+.badge.red { background:#ff3b30; }
+
+@media print {
+  button { display:none; }
+  body { background:white; }
+}
 </style>
 </head>
 
 <body>
 
-<h1>GiOrders 12</h1>
+<h1>GiOrders</h1>
 
 <div class="card">
 <h3>Nuovo Ordine</h3>
 
 <input id="cliente" placeholder="Nome Cliente">
 
-<!-- TAGLIA 1 -->
-<select id="taglia1">
-<option value="">Taglia 1</option>
-<option>S</option><option>M</option><option>L</option>
-<option>XL</option><option>XXL</option>
+<select id="tipoArticolo">
+<option value="maglia">T-Shirt</option>
+<option value="tazza">Tazza</option>
+<option value="zaino">Zaino</option>
+<option value="altro">Altro</option>
 </select>
 
-<select id="q1">
-<option value="0">Quantità</option>
-<option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option>
-</select>
+<div id="areaTaglie"></div>
 
-<!-- TAGLIA 2 -->
-<select id="taglia2">
-<option value="">Taglia 2</option>
-<option>S</option><option>M</option><option>L</option>
-<option>XL</option><option>XXL</option>
-</select>
-
-<select id="q2">
-<option value="0">Quantità</option>
-<option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option>
-</select>
-
-<!-- TAGLIA 3 -->
-<select id="taglia3">
-<option value="">Taglia 3</option>
-<option>S</option><option>M</option><option>L</option>
-<option>XL</option><option>XXL</option>
-</select>
-
-<select id="q3">
-<option value="0">Quantità</option>
-<option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option>
-</select>
-
-<button class="primary" onclick="aggiungiOrdine()">Aggiungi</button>
+<button class="primary" onclick="aggiungiOrdine()">Aggiungi Ordine</button>
 </div>
 
 <div class="card">
@@ -83,100 +99,133 @@ button { padding:8px 12px; border:none; border-radius:8px; margin:4px 0;}
 <div class="card">
 <h3>Riepilogo Totale Taglie</h3>
 <div id="riepilogo"></div>
-<button class="primary" onclick="window.print()">Esporta / Stampa Ordine</button>
+<button class="primary" onclick="window.print()">Stampa Ordine Completo</button>
 </div>
 
 <script>
 
 let ordini = [];
+let taglie = ["S","M","L","XL","XXL"];
+
+function creaSelettoriTaglie(){
+  let area = document.getElementById("areaTaglie");
+  area.innerHTML="";
+  
+  if(tipoArticolo.value === "maglia"){
+    taglie.forEach(t=>{
+      area.innerHTML += `
+        <div class="row">
+          <select class="small-select" id="t_${t}">
+            <option value="">${t}</option>
+          </select>
+          <select class="small-select" id="q_${t}">
+            <option value="0">0</option>
+            <option>1</option><option>2</option><option>3</option>
+            <option>4</option><option>5</option>
+          </select>
+        </div>
+      `;
+    });
+  } else {
+    area.innerHTML = `
+      <div class="row">
+        <select class="small-select" id="quantitaOggetto">
+          <option value="0">Quantità</option>
+          <option>1</option><option>2</option><option>3</option>
+          <option>4</option><option>5</option>
+        </select>
+      </div>
+    `;
+  }
+}
+
+tipoArticolo.addEventListener("change", creaSelettoriTaglie);
 
 function aggiungiOrdine(){
-    let cliente = document.getElementById("cliente").value;
-    if(cliente === "") return alert("Inserisci nome cliente");
+  let cliente = cliente.value;
+  if(!cliente) return;
 
-    let ordine = {
-        cliente,
-        taglie: [
-            {t:taglia1.value, q:parseInt(q1.value)},
-            {t:taglia2.value, q:parseInt(q2.value)},
-            {t:taglia3.value, q:parseInt(q3.value)}
-        ],
-        pagato:false
-    };
+  let tipo = tipoArticolo.value;
+  let dettagli = {};
+  let totaleTaglie = {};
 
-    ordini.push(ordine);
-    salva();
-    aggiorna();
-    reset();
+  if(tipo === "maglia"){
+    taglie.forEach(t=>{
+      let q = parseInt(document.getElementById("q_"+t).value);
+      if(q>0){
+        dettagli[t]=q;
+        totaleTaglie[t]=(totaleTaglie[t]||0)+q;
+      }
+    });
+  } else {
+    let q = parseInt(document.getElementById("quantitaOggetto").value);
+    if(q>0) dettagli[tipo]=q;
+  }
+
+  ordini.push({cliente,tipo,dettagli,pagato:false});
+  salva();
+  aggiorna();
+  document.getElementById("cliente").value="";
 }
 
 function aggiorna(){
-    let lista = document.getElementById("listaOrdini");
-    lista.innerHTML="";
+  let lista = document.getElementById("listaOrdini");
+  let riepilogo = {};
+  lista.innerHTML="";
 
-    let totali = {};
-
-    ordini.forEach((o,i)=>{
-        let riga = document.createElement("div");
-        riga.className="order-line";
-
-        let testo = "<strong>"+o.cliente+"</strong><br>";
-
-        o.taglie.forEach(item=>{
-            if(item.t && item.q>0){
-                testo += item.q+" "+item.t+" ";
-                totali[item.t] = (totali[item.t]||0)+item.q;
-            }
-        });
-
-        testo += "<br>";
-        testo += o.pagato 
-            ? "<span class='green small'>PAGATO</span>"
-            : "<span class='red small'>NON PAGATO</span>";
-
-        riga.innerHTML = testo +
-        "<br><button class='small' onclick='togglePagato("+i+")'>Cambia Stato</button> " +
-        "<button class='small red' onclick='elimina("+i+")'>Elimina</button>";
-
-        lista.appendChild(riga);
-    });
-
-    let box = document.getElementById("riepilogo");
-    box.innerHTML="";
-    for(let t in totali){
-        box.innerHTML += "<div class='total-box'>Totale "+t+": "+totali[t]+"</div>";
+  ordini.forEach((o,i)=>{
+    let testo = o.cliente+" - "+o.tipo+" ";
+    for(let k in o.dettagli){
+      testo += o.dettagli[k]+" "+k+" ";
+      if(o.tipo==="maglia"){
+        riepilogo[k]=(riepilogo[k]||0)+o.dettagli[k];
+      }
     }
+
+    lista.innerHTML += `
+      <div class="order-line">
+        <div>${testo}</div>
+        <div>
+          <span class="badge ${o.pagato?'green':'red'}">
+            ${o.pagato?'PAGATO':'NON PAGATO'}
+          </span>
+          <button onclick="togglePagato(${i})">↺</button>
+          <button class="red" onclick="elimina(${i})">X</button>
+        </div>
+      </div>
+    `;
+  });
+
+  let box = document.getElementById("riepilogo");
+  box.innerHTML="";
+  for(let t in riepilogo){
+    box.innerHTML += "<div>Totale "+t+": "+riepilogo[t]+"</div>";
+  }
 }
 
 function togglePagato(i){
-    ordini[i].pagato = !ordini[i].pagato;
-    salva();
-    aggiorna();
+  ordini[i].pagato=!ordini[i].pagato;
+  salva();
+  aggiorna();
 }
 
 function elimina(i){
-    ordini.splice(i,1);
-    salva();
-    aggiorna();
-}
-
-function reset(){
-    document.getElementById("cliente").value="";
-    taglia1.value=""; q1.value="0";
-    taglia2.value=""; q2.value="0";
-    taglia3.value=""; q3.value="0";
+  ordini.splice(i,1);
+  salva();
+  aggiorna();
 }
 
 function salva(){
-    localStorage.setItem("giorders", JSON.stringify(ordini));
+  localStorage.setItem("giorders",JSON.stringify(ordini));
 }
 
 function carica(){
-    let dati = localStorage.getItem("giorders");
-    if(dati) ordini = JSON.parse(dati);
-    aggiorna();
+  let dati = localStorage.getItem("giorders");
+  if(dati) ordini=JSON.parse(dati);
+  aggiorna();
 }
 
+creaSelettoriTaglie();
 carica();
 
 </script>
