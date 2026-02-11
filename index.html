@@ -3,222 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GiOrders 11.4 - Event Pro Ultra</title>
+
+<title>GiOrders</title>
+<meta name="apple-mobile-web-app-title" content="GiOrders">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- ICONA -->
+<link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
 
 <style>
-body { font-family:-apple-system, sans-serif; margin:0; padding:20px; background:#f4f8ff;}
-h1 { text-align:center; color:#0A84FF; }
-.card { background:white; padding:15px; border-radius:18px; margin-bottom:15px; box-shadow:0 6px 12px rgba(0,0,0,0.05);}
-button { padding:8px 12px; margin:4px; border:none; border-radius:10px; font-size:13px;}
-.primary { background:#0A84FF; color:white;}
-.red { background:#ff3b30; color:white;}
-.green { background:#34c759; color:white;}
-select, input { width:100%; padding:8px; margin-bottom:8px; border-radius:10px; border:1px solid #ccc; font-size:14px;}
-.order-line { font-size:13px; padding:6px 0; border-bottom:1px solid #eee;}
-.small-btn { font-size:11px; padding:5px 8px; }
-canvas { width:100%; height:200px; }
-@media print { button { display:none; } }
+html, body {
+  margin:0;
+  padding:0;
+  font-family:-apple-system, sans-serif;
+  background:#f2f2f7;
+  -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+h1 {
+  text-align:center;
+  color:#0A84FF;
+}
+
+.card {
+  background:white;
+  padding:15px;
+  margin:15px;
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+button {
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  margin-top:5px;
+}
+
+.primary { background:#0A84FF; color:white; }
+.red { background:#ff3b30; color:white; }
+.green { background:#34c759; color:white; }
+
+select, input {
+  width:100%;
+  padding:8px;
+  margin-top:6px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+.order-line {
+  font-size:14px;
+  padding:6px 0;
+  border-bottom:1px solid #eee;
+}
+
+@media print {
+  button { display:none; }
+}
 </style>
 </head>
+
 <body>
 
-<h1>GiOrders 11.4</h1>
-
-<div class="card">
-<h3>Seleziona Evento</h3>
-<input type="text" id="eventName" placeholder="Nome nuovo evento">
-<button class="primary" onclick="createEvent()">Crea Evento</button>
-<select id="eventSelect" onchange="loadEvent()"></select>
-</div>
+<h1>GiOrders</h1>
 
 <div class="card">
 <h3>Nuovo Ordine</h3>
-<input type="text" id="customerName" placeholder="Nome Cliente">
-<input type="number" id="shirtPrice" value="6" placeholder="Prezzo €">
-<div id="sizesArea"></div>
-<button id="paymentBtn" class="red" onclick="togglePayment()">NON PAGATO</button>
-<button class="primary" onclick="saveOrder()">Salva Ordine</button>
+
+<input id="nome" placeholder="Nome persona">
+
+<select id="taglia">
+<option>S</option>
+<option>M</option>
+<option>L</option>
+<option>XL</option>
+<option>XXL</option>
+</select>
+
+<select id="quantita">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="10">10</option>
+<option value="20">20</option>
+</select>
+
+<input id="prezzo" type="number" placeholder="Prezzo maglia" value="20">
+
+<select id="pagato">
+<option value="no">Non pagato</option>
+<option value="si">Pagato</option>
+</select>
+
+<button class="primary" onclick="aggiungi()">Aggiungi</button>
 </div>
 
 <div class="card">
-<h3>Riepilogo</h3>
-<div id="sizeSummary"></div>
-<p><strong>Totale €:</strong> € <span id="totalRevenue">0</span></p>
-<p><strong>Incassato:</strong> € <span id="paidTotal">0</span></p>
-<p><strong>Da Incassare:</strong> € <span id="unpaidTotal">0</span></p>
-<canvas id="chart"></canvas>
-<button class="primary" onclick="exportCSV()">Esporta CSV</button>
+<h3>Elenco Ordini</h3>
+<div id="lista"></div>
 </div>
 
 <div class="card">
-<h3>Storico Ordini</h3>
-<div id="ordersList"></div>
+<h3>Totale</h3>
+<div id="totale"></div>
+<button class="green" onclick="window.print()">Stampa</button>
 </div>
 
 <script>
-let paid=false;
-let sizes=["XS","S","M","L","XL","XXL"];
-let currentEvent="";
+let ordini = JSON.parse(localStorage.getItem("ordini")) || [];
 
-function createDropdown(id){
- let select="<select id='"+id+"'>";
- for(let i=0;i<=9;i++){ select+="<option value='"+i+"'>"+i+"</option>"; }
- select+="</select>";
- return select;
+function salva() {
+  localStorage.setItem("ordini", JSON.stringify(ordini));
 }
 
-function renderSizes(){
- let area=document.getElementById("sizesArea");
- area.innerHTML="";
- sizes.forEach(size=>{ area.innerHTML+=size+" "+createDropdown("size_"+size)+"<br>"; });
+function aggiungi() {
+  let nome = document.getElementById("nome").value;
+  let taglia = document.getElementById("taglia").value;
+  let quantita = parseInt(document.getElementById("quantita").value);
+  let prezzo = parseFloat(document.getElementById("prezzo").value);
+  let pagato = document.getElementById("pagato").value;
+
+  if(!nome) return;
+
+  ordini.push({nome, taglia, quantita, prezzo, pagato});
+  salva();
+  render();
 }
 
-function togglePayment(){
- paid=!paid;
- let btn=document.getElementById("paymentBtn");
- btn.innerText=paid?"PAGATO":"NON PAGATO";
- btn.className=paid?"green":"red";
+function elimina(index) {
+  ordini.splice(index,1);
+  salva();
+  render();
 }
 
-function createEvent(){
- let name=document.getElementById("eventName").value;
- if(!name) return;
- localStorage.setItem("event_"+name, JSON.stringify([]));
- loadEvents();
+function render() {
+  let lista = document.getElementById("lista");
+  let totaleDiv = document.getElementById("totale");
+
+  lista.innerHTML="";
+  let totale=0;
+
+  ordini.forEach((o,i)=>{
+    totale += o.quantita * o.prezzo;
+
+    lista.innerHTML += `
+      <div class="order-line">
+      ${o.nome} - ${o.taglia} x${o.quantita} - €${o.prezzo}
+      (${o.pagato})
+      <button class="red" onclick="elimina(${i})">X</button>
+      </div>
+    `;
+  });
+
+  totaleDiv.innerHTML = "Totale complessivo: €" + totale.toFixed(2);
 }
 
-function loadEvents(){
- let select=document.getElementById("eventSelect");
- select.innerHTML="";
- Object.keys(localStorage).forEach(k=>{
-   if(k.startsWith("event_")){
-     let option=document.createElement("option");
-     option.value=k;
-     option.text=k.replace("event_","");
-     select.appendChild(option);
-   }
- });
-}
-
-function loadEvent(){
- currentEvent=document.getElementById("eventSelect").value;
- updateDashboard();
- renderOrders();
-}
-
-function saveOrder(){
- if(!currentEvent) return alert("Seleziona evento");
- let name=document.getElementById("customerName").value;
- let price=parseFloat(document.getElementById("shirtPrice").value);
- if(!name) return;
-
- let sizeData={}, total=0, hasQty=false;
- sizes.forEach(size=>{
-   let qty=parseInt(document.getElementById("size_"+size).value);
-   if(qty>0){ sizeData[size]=qty; total+=qty*price; hasQty=true; }
- });
- if(!hasQty) return;
-
- let orders=JSON.parse(localStorage.getItem(currentEvent));
- orders.push({customer:name,sizes:sizeData,total:total,paid:paid});
- localStorage.setItem(currentEvent, JSON.stringify(orders));
-
- document.getElementById("customerName").value="";
- renderSizes();
- updateDashboard();
- renderOrders();
-}
-
-function updateDashboard(){
- if(!currentEvent) return;
- let orders=JSON.parse(localStorage.getItem(currentEvent));
- let summary={}, total=0, paidT=0, unpaidT=0;
- sizes.forEach(s=>summary[s]=0);
-
- orders.forEach(o=>{
-   for(let s in o.sizes){ summary[s]+=o.sizes[s]; }
-   total+=o.total;
-   if(o.paid) paidT+=o.total; else unpaidT+=o.total;
- });
-
- let div=document.getElementById("sizeSummary");
- div.innerHTML="";
- sizes.forEach(s=>{ div.innerHTML+=s+": "+summary[s]+"<br>"; });
-
- document.getElementById("totalRevenue").innerText=total.toFixed(2);
- document.getElementById("paidTotal").innerText=paidT.toFixed(2);
- document.getElementById("unpaidTotal").innerText=unpaidT.toFixed(2);
-
- drawChart(summary);
-}
-
-function drawChart(summary){
- let canvas=document.getElementById("chart");
- let ctx=canvas.getContext("2d");
- canvas.width=300; canvas.height=200;
- ctx.clearRect(0,0,300,200);
- let max=Math.max(...Object.values(summary),1);
- let x=10;
- sizes.forEach(s=>{
-   let h=(summary[s]/max)*150;
-   ctx.fillRect(x,180-h,20,h);
-   ctx.fillText(s,x,195);
-   x+=40;
- });
-}
-
-function renderOrders(){
- if(!currentEvent) return;
- let list=document.getElementById("ordersList");
- list.innerHTML="";
- let orders=JSON.parse(localStorage.getItem(currentEvent));
- orders.forEach((o,index)=>{
-   let details="";
-   for(let s in o.sizes){ details+=o.sizes[s]+" "+s+" "; }
-   list.innerHTML+="<div class='order-line'><strong>"+o.customer+"</strong> - "+details+
-   " - €"+o.total.toFixed(2)+" - "+(o.paid?"PAGATO":"NON PAGATO")+
-   " <button class='small-btn primary' onclick='editOrder("+index+")'>Modifica</button>"+
-   " <button class='small-btn red' onclick='deleteOrder("+index+")'>Elimina</button></div>";
- });
-}
-
-function editOrder(index){
- let orders=JSON.parse(localStorage.getItem(currentEvent));
- let o=orders[index];
- document.getElementById("customerName").value=o.customer;
- sizes.forEach(s=>{ document.getElementById("size_"+s).value=o.sizes[s]||0; });
- paid=o.paid;
- togglePayment();
- deleteOrder(index);
-}
-
-function deleteOrder(index){
- let orders=JSON.parse(localStorage.getItem(currentEvent));
- orders.splice(index,1);
- localStorage.setItem(currentEvent, JSON.stringify(orders));
- updateDashboard();
- renderOrders();
-}
-
-function exportCSV(){
- if(!currentEvent) return;
- let orders=JSON.parse(localStorage.getItem(currentEvent));
- let csv="Cliente,Taglie,Totale,Pagato\n";
- orders.forEach(o=>{
-   let details="";
-   for(let s in o.sizes){ details+=o.sizes[s]+" "+s+" "; }
-   csv+=o.customer+","+details+","+o.total+","+(o.paid?"SI":"NO")+"\n";
- });
- let blob=new Blob([csv],{type:"text/csv"});
- let a=document.createElement("a");
- a.href=URL.createObjectURL(blob);
- a.download="giorders_"+currentEvent+".csv";
- a.click();
-}
-
-renderSizes();
-loadEvents();
+render();
 </script>
 
 </body>
