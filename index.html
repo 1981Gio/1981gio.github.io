@@ -72,7 +72,7 @@ input,select{
 
 /* ---------- PIN SYSTEM ---------- */
 
-let savedPIN = localStorage.getItem("gi_pin") || "1234";
+let savedPIN = localStorage.getItem("gi_pin") || "1926";
 
 function renderLogin(){
   login.innerHTML=`
@@ -122,8 +122,8 @@ function renderHome(){
     <h3>Crea Evento</h3>
     <input id="nomeEvento" placeholder="Nome Evento">
     <select id="tipoEvento">
-      <option value="maglia">T-Shirt</option>
-      <option value="oggetto">Oggetto</option>
+      <option value="maglia">Abbigliamento</option>
+      <option value="oggetto">Gadget</option>
     </select>
     <input type="number" id="prezzoEvento" placeholder="Prezzo fisso €">
     <button class="primary" onclick="creaEvento()">Crea Evento</button>
