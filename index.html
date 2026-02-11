@@ -1,105 +1,102 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GiOrders Pro</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0A84FF">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
 
 <style>
-:root{--bg:#f2f2f7;--card:#fff;--text:#000;}
-.dark{--bg:#1c1c1e;--card:#2c2c2e;--text:#fff;}
+body{
+font-family:-apple-system;
+margin:0;
+background:#f2f2f7;
+transition:0.3s;
+}
 
-body{font-family:-apple-system,sans-serif;background:var(--bg);
-color:var(--text);padding:16px;}
+.dark{
+background:#1c1c1e;
+color:white;
+}
 
 .card{
-background:var(--card);
-padding:16px;
-border-radius:16px;
-margin-bottom:16px;
-box-shadow:0 6px 18px rgba(0,0,0,0.08);
-transition:all .3s ease;
+background:white;
+margin:15px;
+padding:15px;
+border-radius:15px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+transition:0.3s;
 }
 
-.row{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:14px;
-padding:10px;
-border-radius:12px;
-transition:all .3s ease;
+.dark .card{
+background:#2c2c2e;
 }
-
-.row:hover{background:rgba(0,0,0,0.05);}
-.row.editing{background:#ffe082;}
 
 button{
-padding:8px 10px;
+padding:8px 12px;
 border:none;
-border-radius:10px;
-font-size:13px;
-margin-left:4px;
+border-radius:8px;
+cursor:pointer;
 }
 
 .primary{background:#0A84FF;color:white;}
 .red{background:#ff3b30;color:white;}
+.green{background:#34c759;color:white;}
+.gray{background:#d1d1d6;}
 
-input,select{
-width:100%;
-padding:8px;
-margin-bottom:8px;
-border-radius:10px;
+select,input{
+padding:6px;
+border-radius:6px;
 border:1px solid #ccc;
 }
 
-.switch{position:relative;width:44px;height:24px;}
-.switch input{display:none;}
-.slider{
-position:absolute;top:0;left:0;right:0;bottom:0;
-background:#ccc;border-radius:24px;
-}
-.slider:before{
-content:"";position:absolute;
-height:18px;width:18px;
-left:3px;bottom:3px;
-background:white;border-radius:50%;
-transition:.3s;
-}
-input:checked + .slider{background:#34c759;}
-input:checked + .slider:before{transform:translateX(20px);}
-
-.stat-box,.summary-box{
-background:#e9f1ff;
-padding:10px;
-border-radius:10px;
-margin-bottom:6px;
+.row{
+margin-bottom:14px;
+padding:12px;
+border-radius:12px;
+background:#f9f9fb;
+transition:0.3s;
 }
 
-.pin-grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin-top:15px;
+.dark .row{
+background:#3a3a3c;
 }
 
-.pin-grid button{
+.editing{
+background:#fff3cd !important;
+}
+
+.orderTop{
+font-weight:bold;
+font-size:16px;
+margin-bottom:5px;
+}
+
+.orderBottom{
+display:flex;
+justify-content:space-between;
+font-size:14px;
+}
+
+.sizeRow{
+display:flex;
+justify-content:space-between;
+margin-bottom:8px;
+}
+
+.sizeRow select{
+width:45%;
+}
+
+.pinPad button{
 font-size:20px;
-padding:18px;
+padding:15px;
 }
 
-@media print{
-button,.switch{display:none;}
-body{background:white;}
-}
 </style>
 </head>
-
 <body>
 
 <div id="login"></div>
@@ -107,102 +104,99 @@ body{background:white;}
 
 <script>
 
-/* ================= PIN ================= */
+let savedPIN=localStorage.getItem("pin")||"1926";
+let eventi=JSON.parse(localStorage.getItem("eventi")||"{}");
+let eventoCorrente=null;
+let indiceModifica=null;
 
-let savedPIN = localStorage.getItem("gi_pin") || "1926";
-let pinValue="";
+let taglie=["XS","S","M","L","XL","XXL"];
+
+function salva(){
+localStorage.setItem("eventi",JSON.stringify(eventi));
+}
 
 function renderLogin(){
 login.innerHTML=`
 <div class="card" style="text-align:center;">
-<h2>GiOrders Pro</h2>
-<div id="dots" style="font-size:28px;letter-spacing:10px;margin:20px 0;">○ ○ ○ ○</div>
-<div class="pin-grid">
-${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="digita(${n})">${n}</button>`).join("")}
-<button onclick="cancella()">⌫</button>
-<button onclick="digita(0)">0</button>
-<button onclick="resetPin()">Reset</button>
+<h3>GiOrders Pro</h3>
+<div id="dots" style="font-size:28px;letter-spacing:8px;margin:20px;">○ ○ ○ ○</div>
+<div class="pinPad" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="digit(${n})">${n}</button>`).join("")}
+<button onclick="del()">⌫</button>
+<button onclick="digit(0)">0</button>
+<button onclick="clearPin()">C</button>
 </div>
 </div>`;
 }
 
-function digita(n){
-if(pinValue.length>=4)return;
-pinValue+=n;
-aggiornaDots();
-if(pinValue.length===4)setTimeout(controllaPIN,200);
+let pinInput="";
+function digit(n){
+if(pinInput.length>=4)return;
+pinInput+=n;
+updateDots();
+if(pinInput.length===4)setTimeout(checkPin,200);
 }
 
-function aggiornaDots(){
-let out="";
-for(let i=0;i<4;i++)out+=i<pinValue.length?"● ":"○ ";
-document.getElementById("dots").innerHTML=out;
+function del(){
+pinInput=pinInput.slice(0,-1);
+updateDots();
 }
 
-function controllaPIN(){
-if(pinValue===savedPIN){
+function clearPin(){
+pinInput="";
+updateDots();
+}
+
+function updateDots(){
+let s="";
+for(let i=0;i<4;i++){
+s+=i<pinInput.length?"● ":"○ ";
+}
+dots.innerHTML=s;
+}
+
+function checkPin(){
+if(pinInput===savedPIN){
 login.style.display="none";
 app.style.display="block";
 renderHome();
 }else{
 alert("PIN errato");
-pinValue="";
-aggiornaDots();
+pinInput="";
+updateDots();
 }
 }
-
-function cancella(){pinValue=pinValue.slice(0,-1);aggiornaDots();}
-function resetPin(){pinValue="";aggiornaDots();}
-function cambiaPIN(){
-let nuovo=prompt("Nuovo PIN");
-if(nuovo && nuovo.length>=4){
-savedPIN=nuovo;
-localStorage.setItem("gi_pin",nuovo);
-}
-}
-
-/* ================= CORE ================= */
-
-let eventi=JSON.parse(localStorage.getItem("gi_eventi"))||{};
-let eventoCorrente=null;
-let taglie=["XS","S","M","L","XL","XXL"];
-let indiceModifica=null;
-
-function salva(){localStorage.setItem("gi_eventi",JSON.stringify(eventi));}
-
-/* ================= HOME ================= */
 
 function renderHome(){
 app.innerHTML=`
 <div class="card">
-<button onclick="toggleDark()">🌙</button>
-<button onclick="cambiaPIN()">🔐</button>
-<button onclick="esportaBackup()">💾</button>
-<button onclick="importaBackup()">📥</button>
-<input type="file" id="fileImport" style="display:none" onchange="leggiBackup(event)">
-<h3>Crea Evento</h3>
-<input id="nomeEvento" placeholder="Nome Evento">
+<h3>Nuovo Evento</h3>
+<input id="nomeEvento" placeholder="Nome evento"><br><br>
 <select id="tipoEvento">
-<option value="maglia">Abbigliamento</option>
-<option value="oggetto">Gadget</option>
-</select>
-<input type="number" id="prezzoEvento" placeholder="Prezzo €">
-<button class="primary" onclick="creaEvento()">Crea</button>
+<option value="abbigliamento">Abbigliamento</option>
+<option value="gadget">Gadget</option>
+<option value="bus">Bus</option>
+</select><br><br>
+<input id="prezzoEvento" type="number" placeholder="Prezzo unitario"><br><br>
+<button class="primary" onclick="creaEvento()">Crea Evento</button>
+<button onclick="toggleDark()">🌙</button>
 </div>
+
+${Object.keys(eventi).map(e=>`
 <div class="card">
-${Object.keys(eventi).map(n=>`
-<div class="row">
-<button onclick="apriEvento('${n}')">${n}</button>
-<button class="red" onclick="eliminaEvento('${n}')">X</button>
-</div>`).join("")}
-</div>`;
+<b>${e}</b><br>
+<button onclick="entraEvento('${e}')">Apri</button>
+<button class="red" onclick="eliminaEvento('${e}')">Elimina</button>
+</div>
+`).join("")}
+`;
 }
 
 function creaEvento(){
 let nome=nomeEvento.value;
 let tipo=tipoEvento.value;
-let prezzo=parseFloat(prezzoEvento.value);
-if(!nome||!prezzo)return;
+let prezzo=parseFloat(prezzoEvento.value||0);
+if(!nome)return;
 eventi[nome]={tipo,prezzo,ordini:[]};
 salva();
 renderHome();
@@ -216,50 +210,62 @@ renderHome();
 }
 }
 
-function apriEvento(n){
+function entraEvento(n){
 eventoCorrente=n;
 renderEvento();
 }
-
-/* ================= EVENTO ================= */
 
 function renderEvento(){
 let ev=eventi[eventoCorrente];
 
 app.innerHTML=`
 <div class="card">
-<button onclick="renderHome()">←</button>
 <h3>${eventoCorrente}</h3>
-<p>Prezzo € ${ev.prezzo}</p>
-</div>
+Prezzo € ${ev.prezzo}<br><br>
+<input id="cliente" placeholder="Nome cliente"><br><br>
 
-<div class="card" id="formCard">
-<input id="cliente" placeholder="Nome Cliente">
-${ev.tipo==="maglia"
-? taglie.map(t=>`
-<div class="row">
-<div>${t}</div>
-<select id="q_${t}">
-<option value="0">0</option>
-${[1,2,3,4,5,6,7,8,9].map(n=>`<option>${n}</option>`).join("")}
-</select>
-</div>`).join("")
-: `<select id="q_obj">
-<option value="0">Quantità</option>
-${[1,2,3,4,5,6,7,8,9].map(n=>`<option>${n}</option>`).join("")}
-</select>`
-}
+<div id="formArea"></div>
+
 <button class="primary" id="btnSubmit" onclick="aggiungiOrdine()">Aggiungi</button>
-<button id="btnCancel" style="display:none;" onclick="annullaModifica()">Annulla modifica</button>
+<button class="gray" id="btnCancel" style="display:none;" onclick="resetForm()">Annulla modifica</button>
+<button onclick="renderHome()">Indietro</button>
 </div>
 
-<div class="card"><h3>Ordini</h3><div id="listaOrdini"></div></div>
-<div class="card"><h3>Statistiche</h3><div id="stats"></div></div>
-<div class="card"><h3>📋 Riepilogo Ordini</h3><div id="riepilogo"></div></div>
-<button onclick="window.print()">🖨 Stampa</button>
+<div class="card">
+<h3>Ordini</h3>
+<div id="listaOrdini"></div>
+</div>
+
+<div class="card">
+<h3>Statistiche</h3>
+<div id="stats"></div>
+</div>
 `;
 
+renderForm();
 aggiornaEvento();
+}
+
+function renderForm(){
+let ev=eventi[eventoCorrente];
+let html="";
+if(ev.tipo==="abbigliamento"){
+taglie.forEach(t=>{
+html+=`
+<div class="sizeRow">
+<label>${t}</label>
+<select id="q_${t}">
+${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`)}
+</select>
+</div>`;
+});
+}else{
+html=`
+<select id="q_obj">
+${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`)}
+</select>`;
+}
+formArea.innerHTML=html;
 }
 
 function aggiungiOrdine(){
@@ -267,23 +273,23 @@ let ev=eventi[eventoCorrente];
 let nome=cliente.value;
 if(!nome)return;
 
-let dettagli={},totale=0;
+let dettagli={},tot=0;
 
-if(ev.tipo==="maglia"){
+if(ev.tipo==="abbigliamento"){
 taglie.forEach(t=>{
-let q=parseInt(document.getElementById("q_"+t).value);
-if(q>0){dettagli[t]=q;totale+=q*ev.prezzo;}
+let q=parseInt(document.getElementById("q_"+t)?.value||0);
+if(q>0){dettagli[t]=q;tot+=q*ev.prezzo;}
 });
 }else{
-let q=parseInt(q_obj.value);
-if(q>0){dettagli["pezzi"]=q;totale+=q*ev.prezzo;}
+let q=parseInt(document.getElementById("q_obj").value);
+if(q>0){dettagli["pezzi"]=q;tot+=q*ev.prezzo;}
 }
 
 if(indiceModifica!==null){
-ev.ordini[indiceModifica]={nome,dettagli,totale,pagato:ev.ordini[indiceModifica].pagato};
+ev.ordini[indiceModifica]={nome,dettagli,tot,pagato:ev.ordini[indiceModifica].pagato};
 indiceModifica=null;
 }else{
-ev.ordini.push({nome,dettagli,totale,pagato:false});
+ev.ordini.push({nome,dettagli,tot,pagato:false});
 }
 
 salva();
@@ -293,127 +299,85 @@ aggiornaEvento();
 
 function resetForm(){
 cliente.value="";
-taglie.forEach(t=>{let el=document.getElementById("q_"+t);if(el)el.value=0;});
-if(document.getElementById("q_obj"))q_obj.value=0;
+renderForm();
 btnSubmit.innerText="Aggiungi";
 btnCancel.style.display="none";
+indiceModifica=null;
+document.querySelectorAll(".row").forEach(r=>r.classList.remove("editing"));
+}
+
+function aggiornaEvento(){
+let ev=eventi[eventoCorrente];
+
+listaOrdini.innerHTML=ev.ordini.map((o,i)=>`
+<div class="row ${indiceModifica===i?"editing":""}">
+<div class="orderTop">${o.nome}</div>
+<div class="orderBottom">
+<div>${Object.entries(o.dettagli).map(([k,v])=>`${v} ${k}`).join(" ")}</div>
+<div>€ ${o.tot} <br> 
+<span style="color:${o.pagato?"#34c759":"#ff3b30"};">
+${o.pagato?"PAGATO":"NON PAGATO"}
+</span>
+</div>
+</div>
+<button onclick="modificaOrdine(${i})">✏️</button>
+<button class="red" onclick="eliminaOrdine(${i})">🗑</button>
+<button class="${o.pagato?"green":"gray"}" onclick="togglePagato(${i})">
+${o.pagato?"✔":"Paga"}
+</button>
+</div>
+`).join("");
+
+let totInc=0,totNon=0;
+ev.ordini.forEach(o=>{
+if(o.pagato)totInc+=o.tot;
+else totNon+=o.tot;
+});
+stats.innerHTML=`
+Incassato € ${totInc}<br>
+Da incassare € ${totNon}
+`;
 }
 
 function modificaOrdine(i){
 indiceModifica=i;
 let o=eventi[eventoCorrente].ordini[i];
 cliente.value=o.nome;
-taglie.forEach(t=>{let el=document.getElementById("q_"+t);if(el)el.value=o.dettagli[t]||0;});
-if(document.getElementById("q_obj"))q_obj.value=o.dettagli["pezzi"]||0;
-btnSubmit.innerText="Salva Modifica";
-btnCancel.style.display="inline-block";
-document.querySelectorAll(".row").forEach(r=>r.classList.remove("editing"));
-document.querySelectorAll(".row")[i].classList.add("editing");
-window.scrollTo({top:0,behavior:'smooth'});
+renderForm();
+
+for(let k in o.dettagli){
+let el=document.getElementById("q_"+k)||document.getElementById("q_obj");
+if(el)el.value=o.dettagli[k];
 }
 
-function annullaModifica(){
-indiceModifica=null;
-resetForm();
+btnSubmit.innerText="Salva Modifica";
+btnCancel.style.display="inline-block";
+
 document.querySelectorAll(".row").forEach(r=>r.classList.remove("editing"));
+document.querySelectorAll(".row")[i].classList.add("editing");
+
+window.scrollTo({top:0,behavior:"smooth"});
 }
 
 function eliminaOrdine(i){
-if(confirm("Eliminare ordine?")){
 eventi[eventoCorrente].ordini.splice(i,1);
 salva();
 aggiornaEvento();
 }
-}
 
 function togglePagato(i){
-eventi[eventoCorrente].ordini[i].pagato=!eventi[eventoCorrente].ordini[i].pagato;
+let o=eventi[eventoCorrente].ordini[i];
+o.pagato=!o.pagato;
 salva();
 aggiornaEvento();
 }
 
-function aggiornaEvento(){
-let ev=eventi[eventoCorrente];
-let lista=document.getElementById("listaOrdini");
-let riepilogo=document.getElementById("riepilogo");
-let stats=document.getElementById("stats");
-
-lista.innerHTML="";
-riepilogo.innerHTML="";
-
-let inc=0,nonInc=0;
-
-ev.ordini.forEach((o,i)=>{
-if(o.pagato)inc+=o.totale;else nonInc+=o.totale;
-let dettagli=Object.entries(o.dettagli).map(([k,v])=>v+" "+k).join(" ");
-
-lista.innerHTML+=`
-<div class="row">
-<div>
-<strong>${o.nome}</strong><br>
-${dettagli}
-</div>
-<div style="text-align:right;">
-€ ${o.totale}<br>
-${o.pagato?"PAGATO":"NON PAGATO"}
-</div>
-<div>
-<button onclick="modificaOrdine(${i})">✏️</button>
-<button class="red" onclick="eliminaOrdine(${i})">🗑</button>
-<label class="switch">
-<input type="checkbox" ${o.pagato?'checked':''} onchange="togglePagato(${i})">
-<span class="slider"></span>
-</label>
-</div>
-</div>`;
-});
-
-stats.innerHTML=`
-<div class="stat-box">Incassato € ${inc}</div>
-<div class="stat-box">Da incassare € ${nonInc}</div>
-<div class="stat-box">Totale ordini ${ev.ordini.length}</div>
-`;
-
-let ordinati=[...ev.ordini].sort((a,b)=>a.nome.localeCompare(b.nome));
-ordinati.forEach(o=>{
-let dettagli=Object.entries(o.dettagli).map(([k,v])=>v+" "+k).join(" ");
-riepilogo.innerHTML+=`
-<div class="summary-box">
-<strong>${o.nome}</strong><br>
-${dettagli} — € ${o.totale} (${o.pagato?"PAGATO":"NON PAGATO"})
-</div>`;
-});
+function toggleDark(){
+document.body.classList.toggle("dark");
 }
-
-/* BACKUP */
-
-function esportaBackup(){
-let blob=new Blob([JSON.stringify({eventi,pin:savedPIN})],{type:"application/json"});
-let url=URL.createObjectURL(blob);
-let a=document.createElement("a");
-a.href=url;
-a.download="giorders_backup.json";
-a.click();
-}
-
-function importaBackup(){fileImport.click();}
-function leggiBackup(e){
-let reader=new FileReader();
-reader.onload=function(ev){
-let d=JSON.parse(ev.target.result);
-eventi=d.eventi||{};
-savedPIN=d.pin||"1926";
-salva();
-renderHome();
-};
-reader.readAsText(e.target.files[0]);
-}
-
-function toggleDark(){document.body.classList.toggle("dark");}
-
-if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js');}
 
 renderLogin();
+
 </script>
 </body>
 </html>
