@@ -13,28 +13,31 @@
 <style>
 body{font-family:-apple-system;margin:0;background:#f2f2f7}
 .dark{background:#111;color:white}
-.card{background:white;margin:15px;padding:15px;border-radius:16px;box-shadow:0 4px 10px rgba(0,0,0,.08)}
-.dark .card{background:#1e1e1e}
-button{padding:8px 12px;border:none;border-radius:8px;margin:3px;cursor:pointer}
+.card{background:white;margin:15px;padding:16px;border-radius:16px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.dark .card{background:#1c1c1e}
+button{padding:6px 10px;border:none;border-radius:8px;font-size:13px;cursor:pointer}
 .primary{background:#0A84FF;color:white}
 .red{background:#ff3b30;color:white}
 .green{background:#34c759;color:white}
-.gray{background:#ccc}
-.row{margin-bottom:8px;padding:6px 0;border-bottom:1px solid #eee}
-.highlight{background:#fff3cd}
-.status{font-weight:bold}
-.paid{color:#34c759}
-.unpaid{color:#ff3b30}
-.busBar{height:18px;background:#ddd;border-radius:10px;overflow:hidden;margin-top:5px}
-.busFill{height:100%;background:#0A84FF;width:0%}
-input,select{padding:6px;border-radius:6px;border:1px solid #ccc;margin-bottom:6px}
+.gray{background:#d1d1d6}
+input,select{padding:6px;border-radius:8px;border:1px solid #ccc;font-size:14px}
+.sizeRow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.orderBox{padding:10px 0;border-bottom:1px solid #e5e5ea}
+.orderTop{display:flex;justify-content:space-between;font-weight:600;font-size:15px}
+.orderBottom{display:flex;justify-content:space-between;font-size:14px;margin-top:3px}
+.statusPaid{color:#34c759;font-weight:600}
+.statusUnpaid{color:#ff3b30;font-weight:600}
+.actions{margin-top:6px}
+.actions button{margin-right:6px}
+.highlight{background:#fff3cd;border-radius:10px;padding:6px}
 .pin-screen{position:fixed;inset:0;background:#0A84FF;color:white;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .keypad{display:grid;grid-template-columns:repeat(3,70px);gap:10px}
 .keypad button{font-size:20px;padding:15px;background:#004aad;color:white}
 .hidden{display:none}
-@media print{button{display:none}}
+@media print{button{display:none}body{background:white}}
 </style>
 </head>
+
 <body>
 
 <div id="pinScreen" class="pin-screen">
@@ -86,14 +89,14 @@ function renderHome(){
 document.getElementById("app").innerHTML=`
 <div class="card">
 <h2>Eventi</h2>
-<input id="evName" placeholder="Nome evento">
+<input id="evName" placeholder="Nome evento"><br>
 <select id="evType">
 <option>Abbigliamento</option>
 <option>Gadget</option>
 <option>Bus</option>
-</select>
-<input id="evPrice" type="number" placeholder="Prezzo €">
-<input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)">
+</select><br>
+<input id="evPrice" type="number" placeholder="Prezzo €"><br>
+<input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)"><br>
 <button class="primary" onclick="addEvent()">Crea</button>
 <button onclick="toggleDark()">🌙</button>
 <button onclick="exportData()">Backup</button>
@@ -132,13 +135,13 @@ let ev=data.events[i];
 document.getElementById("app").innerHTML=`
 <div class="card">
 <h2>${ev.name} - €${ev.price}</h2>
-<input id="custName" placeholder="Nome">
+<input id="custName" placeholder="Nome"><br>
 <div id="quantArea"></div>
-<label>Pagato</label><input type="checkbox" id="paid">
-<br>
+<label>Pagato</label> <input type="checkbox" id="paid"><br>
 <button class="primary" onclick="saveOrder()">Salva</button>
 <button onclick="cancelEdit()">Annulla</button>
 <button onclick="renderHome()">Indietro</button>
+<button onclick="window.print()">Stampa</button>
 </div>
 <div class="card"><h3>Ordini</h3><div id="orders"></div></div>
 <div class="card"><h3>Riepilogo</h3><div id="summary"></div></div>
@@ -152,11 +155,22 @@ let ev=data.events[currentEvent];
 let html="";
 if(ev.type==="Abbigliamento"){
 ["XS","S","M","L","XL","XXL"].forEach(s=>{
- html+=`${s}<select id="q_${s}">${[...Array(11).keys()].map(n=>`<option>${n}</option>`).join("")}</select><br>`;
+ html+=`
+ <div class="sizeRow">
+  <div>${s}</div>
+  <select id="q_${s}">
+  ${[...Array(11).keys()].map(n=>`<option>${n}</option>`).join("")}
+  </select>
+ </div>`;
 });
-}
-else{
- html+=`Quantità<select id="q_Q">${[...Array(51).keys()].map(n=>`<option>${n}</option>`).join("")}</select>`;
+}else{
+ html+=`
+ <div class="sizeRow">
+  <div>Quantità</div>
+  <select id="q_Q">
+  ${[...Array(51).keys()].map(n=>`<option>${n}</option>`).join("")}
+  </select>
+ </div>`;
 }
 document.getElementById("quantArea").innerHTML=html;
 }
@@ -170,8 +184,7 @@ if(ev.type==="Abbigliamento"){
  let q=parseInt(document.getElementById("q_"+s).value);
  if(q>0){sizes[s]=q;totalQty+=q;}
 });
-}
-else{
+}else{
  let q=parseInt(document.getElementById("q_Q").value);
  if(q>0){sizes["Q"]=q;totalQty+=q;}
 }
@@ -182,7 +195,8 @@ if(ev.type==="Bus"){
 let order={name,sizes,total:totalQty*ev.price,paid:paid.checked};
 if(editIndex!=null){ev.orders[editIndex]=order;editIndex=null;}
 else ev.orders.push(order);
-save();renderOrders();custName.value="";renderQuantArea();}
+save();renderOrders();custName.value="";renderQuantArea();
+}
 
 function renderOrders(){
 let ev=data.events[currentEvent];
@@ -190,14 +204,20 @@ let container=document.getElementById("orders");
 container.innerHTML="";
 ev.orders.forEach((o,i)=>{
 container.innerHTML+=`
-<div class="row ${editIndex===i?'highlight':''}">
-<b>${o.name}</b><br>
-${formatSizes(o)} &nbsp; € ${o.total}
-<span class="status ${o.paid?'paid':'unpaid'}">${o.paid?'PAGATO':'NON PAGATO'}</span>
-<br>
-<button onclick="editOrder(${i})">Modifica</button>
-<button class="red" onclick="deleteOrder(${i})">Elimina</button>
-<button onclick="togglePaid(${i})">Toggle</button>
+<div class="orderBox ${editIndex===i?'highlight':''}">
+<div class="orderTop">
+ <div>${o.name}</div>
+ <div>€ ${o.total}</div>
+</div>
+<div class="orderBottom">
+ <div>${formatSizes(o)}</div>
+ <div class="${o.paid?'statusPaid':'statusUnpaid'}">${o.paid?'PAGATO':'NON PAGATO'}</div>
+</div>
+<div class="actions">
+ <button onclick="editOrder(${i})">✏️</button>
+ <button class="red" onclick="deleteOrder(${i})">🗑</button>
+ <button onclick="togglePaid(${i})">🔄</button>
+</div>
 </div>`;
 });
 renderSummary();
@@ -232,10 +252,15 @@ let sorted=[...ev.orders].sort((a,b)=>a.name.localeCompare(b.name));
 sum.innerHTML="";
 sorted.forEach(o=>{
 sum.innerHTML+=`
-<div class="row">
-<b>${o.name}</b><br>
-${formatSizes(o)} &nbsp; € ${o.total}
-<span class="${o.paid?'paid':'unpaid'}">${o.paid?'PAGATO':'NON PAGATO'}</span>
+<div class="orderBox">
+<div class="orderTop">
+ <div>${o.name}</div>
+ <div>€ ${o.total}</div>
+</div>
+<div class="orderBottom">
+ <div>${formatSizes(o)}</div>
+ <div class="${o.paid?'statusPaid':'statusUnpaid'}">${o.paid?'PAGATO':'NON PAGATO'}</div>
+</div>
 </div>`;
 });
 }
