@@ -233,12 +233,13 @@ input:checked + .slider:before{
    CORE DATA & STORAGE
 ================================= */
 
-let data = JSON.parse(localStorage.getItem("giorders_pro_v3")) || {
+let data = let data = JSON.parse(localStorage.getItem("giorders_pro_v2")) || {
     settings:{
         pin:"1926",
         dark:false
     },
     events:[]
+};
 };
 
 let currentEvent = null;
