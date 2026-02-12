@@ -6,79 +6,137 @@
 <title>GiOrders Pro</title>
 
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="1FFB8DDC-1EC1-4569-971E-598213CC5587.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <style>
 body{
-  font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-  margin:0;
-  background:#f2f2f7;
-  padding:20px 0;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+margin:0;
+background:#f2f2f7;
 }
 .dark{background:#111;color:white}
+.header{
+padding:20px;
+font-size:22px;
+font-weight:600;
+}
 .card{
-  background:white;
-  margin:20px;
-  padding:22px;
-  border-radius:20px;
-  box-shadow:0 6px 20px rgba(0,0,0,.05);
+background:white;
+margin:15px;
+padding:20px;
+border-radius:18px;
+box-shadow:0 6px 18px rgba(0,0,0,.06);
 }
 .dark .card{background:#1c1c1e}
-h2{margin-top:0;margin-bottom:18px;font-size:22px}
-input,select{
-  width:100%;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid #e5e5ea;
-  font-size:15px;
-  margin-bottom:14px;
-  box-sizing:border-box;
+input,select,textarea{
+width:100%;
+padding:10px;
+margin-bottom:12px;
+border-radius:12px;
+border:1px solid #e5e5ea;
+font-size:15px;
+box-sizing:border-box;
 }
 button{
-  padding:10px 14px;
-  border:none;
-  border-radius:12px;
-  font-size:14px;
-  cursor:pointer;
-  font-weight:500;
+padding:10px 14px;
+border:none;
+border-radius:12px;
+font-size:14px;
+cursor:pointer;
+font-weight:500;
 }
 .primary{background:#0A84FF;color:white}
 .red{background:#ff3b30;color:white}
 .gray{background:#e5e5ea}
-.buttonRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-.sizeRow{display:flex;justify-content:space-between;margin-bottom:8px}
+.green{background:#34c759;color:white}
+.buttonRow{display:flex;gap:10px;flex-wrap:wrap}
 .orderBox{padding:12px 0;border-bottom:1px solid #e5e5ea}
 .orderTop{display:flex;justify-content:space-between;font-weight:600}
-.orderBottom{display:flex;justify-content:space-between;font-size:14px;margin-top:4px}
+.orderBottom{display:flex;justify-content:space-between;font-size:13px;margin-top:4px}
 .statusPaid{color:#34c759;font-weight:600}
 .statusUnpaid{color:#ff3b30;font-weight:600}
-.highlight{background:#fff3cd;border-radius:10px;padding:8px}
 .hidden{display:none}
+.pin-screen{
+position:fixed;
+inset:0;
+background:#0A84FF;
+color:white;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+}
+.keypad{
+display:grid;
+grid-template-columns:repeat(3,70px);
+gap:12px;
+margin-top:20px;
+}
+.keypad button{
+font-size:20px;
+padding:15px;
+background:#004aad;
+color:white;
+border-radius:14px;
+}
 </style>
 </head>
 <body>
 
-<div id="app"></div>
+<div id="pinScreen" class="pin-screen">
+<h2>GiOrders Pro</h2>
+<div id="pinDisplay" style="font-size:32px;letter-spacing:10px;margin:20px">----</div>
+<div class="keypad">
+<button onclick="press(1)">1</button>
+<button onclick="press(2)">2</button>
+<button onclick="press(3)">3</button>
+<button onclick="press(4)">4</button>
+<button onclick="press(5)">5</button>
+<button onclick="press(6)">6</button>
+<button onclick="press(7)">7</button>
+<button onclick="press(8)">8</button>
+<button onclick="press(9)">9</button>
+<button onclick="clearPin()">C</button>
+<button onclick="press(0)">0</button>
+<button onclick="checkPin()">OK</button>
+</div>
+</div>
+
+<div id="app" class="hidden"></div>
 
 <script>
 
 let data = JSON.parse(localStorage.getItem("gioData") || JSON.stringify({
-  settings:{dark:false},
-  events:[]
+settings:{pin:"1926",dark:false},
+events:[]
 }));
 
 let currentEvent=null;
 let editIndex=null;
+let pinInput="";
 
-function save(){
-  localStorage.setItem("gioData",JSON.stringify(data));
+function save(){localStorage.setItem("gioData",JSON.stringify(data));}
+
+function press(n){
+if(pinInput.length<4){pinInput+=n;updatePin();}
+}
+function clearPin(){pinInput="";updatePin();}
+function updatePin(){document.getElementById("pinDisplay").innerText=pinInput.padEnd(4,"-");}
+function checkPin(){
+if(pinInput===data.settings.pin){
+document.getElementById("pinScreen").classList.add("hidden");
+document.getElementById("app").classList.remove("hidden");
+renderHome();
+}else alert("PIN errato");
 }
 
 function renderHome(){
 document.getElementById("app").innerHTML=`
-<div class="card">
-<h2>Eventi</h2>
+<div class="header">Eventi</div>
 
+<div class="card">
 <input id="evName" placeholder="Nome evento">
 <select id="evType">
 <option>Abbigliamento</option>
@@ -87,22 +145,24 @@ document.getElementById("app").innerHTML=`
 </select>
 <input id="evPrice" type="number" placeholder="Prezzo €">
 <input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)">
-
 <div class="buttonRow">
-  <button class="primary" onclick="addEvent()">Crea evento</button>
-  <button class="gray" onclick="toggleDark()">🌙 Tema</button>
+<button class="primary" onclick="addEvent()">Crea evento</button>
+<button class="gray" onclick="toggleDark()">Tema</button>
+<button class="gray" onclick="changePin()">Cambia PIN</button>
+<button class="gray" onclick="exportData()">Backup</button>
 </div>
+<input type="file" onchange="importData(event)">
 </div>
 
 ${data.events.map((e,i)=>`
 <div class="card">
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <div style="font-size:17px;font-weight:600;">${e.name}</div>
-    <div style="display:flex;gap:8px;">
-      <button class="gray" onclick="openEvent(${i})">Apri</button>
-      <button class="red" onclick="delEvent(${i})">Elimina</button>
-    </div>
-  </div>
+<div class="orderTop">
+<div>${e.name}</div>
+<div>
+<button class="gray" onclick="openEvent(${i})">Apri</button>
+<button class="red" onclick="delEvent(${i})">Elimina</button>
+</div>
+</div>
 </div>`).join("")}
 `;
 
@@ -110,33 +170,23 @@ if(data.settings.dark)document.body.classList.add("dark");
 else document.body.classList.remove("dark");
 }
 
-function toggleDark(){
-  data.settings.dark=!data.settings.dark;
-  save();
-  renderHome();
-}
-
 function addEvent(){
 let name=document.getElementById("evName").value;
 if(!name)return;
-
 data.events.push({
- name,
- type:document.getElementById("evType").value,
- price:parseFloat(document.getElementById("evPrice").value||0),
- seats:parseInt(document.getElementById("evSeats").value||0),
- orders:[]
+name,
+type:document.getElementById("evType").value,
+price:parseFloat(document.getElementById("evPrice").value||0),
+seats:parseInt(document.getElementById("evSeats").value||0),
+orders:[]
 });
-
-save();
-renderHome();
+save();renderHome();
 }
 
 function delEvent(i){
 if(confirm("Eliminare evento?")){
- data.events.splice(i,1);
- save();
- renderHome();
+data.events.splice(i,1);
+save();renderHome();
 }
 }
 
@@ -145,18 +195,38 @@ currentEvent=i;
 let ev=data.events[i];
 
 document.getElementById("app").innerHTML=`
+<div class="header">${ev.name}</div>
+
 <div class="card">
-<h2>${ev.name} - €${ev.price}</h2>
 <input id="custName" placeholder="Nome cliente">
+<input id="custPhone" placeholder="Telefono">
+<textarea id="custNote" placeholder="Note"></textarea>
+
 <div id="quantArea"></div>
-<label>Pagato</label> <input type="checkbox" id="paid"><br><br>
+
+<label>Metodo pagamento</label>
+<select id="payMethod">
+<option>Contanti</option>
+<option>Bonifico</option>
+<option>Altro</option>
+</select>
+
+<label><input type="checkbox" id="paid"> Pagato</label>
+
+<div class="buttonRow">
 <button class="primary" onclick="saveOrder()">Salva</button>
-<button onclick="renderHome()">Indietro</button>
+<button class="gray" onclick="renderHome()">Indietro</button>
+</div>
 </div>
 
 <div class="card">
 <h3>Ordini</h3>
 <div id="orders"></div>
+</div>
+
+<div class="card">
+<h3>Riepilogo</h3>
+<div id="summary"></div>
 </div>
 `;
 
@@ -169,22 +239,16 @@ let ev=data.events[currentEvent];
 let html="";
 if(ev.type==="Abbigliamento"){
 ["XS","S","M","L","XL","XXL"].forEach(s=>{
- html+=`
- <div class="sizeRow">
-  <div>${s}</div>
-  <select id="q_${s}">
-  ${[...Array(11).keys()].map(n=>`<option>${n}</option>`).join("")}
-  </select>
- </div>`;
+html+=`<div class="orderBottom"><div>${s}</div>
+<select id="q_${s}">
+${[...Array(11).keys()].map(n=>`<option>${n}</option>`).join("")}
+</select></div>`;
 });
 }else{
- html+=`
- <div class="sizeRow">
-  <div>Quantità</div>
-  <select id="q_Q">
-  ${[...Array(51).keys()].map(n=>`<option>${n}</option>`).join("")}
-  </select>
- </div>`;
+html+=`<div class="orderBottom"><div>Quantità</div>
+<select id="q_Q">
+${[...Array(51).keys()].map(n=>`<option>${n}</option>`).join("")}
+</select></div>`;
 }
 document.getElementById("quantArea").innerHTML=html;
 }
@@ -195,31 +259,41 @@ let name=document.getElementById("custName").value;
 if(!name)return;
 
 let sizes={};let totalQty=0;
-
 if(ev.type==="Abbigliamento"){
 ["XS","S","M","L","XL","XXL"].forEach(s=>{
- let q=parseInt(document.getElementById("q_"+s).value);
- if(q>0){sizes[s]=q;totalQty+=q;}
+let q=parseInt(document.getElementById("q_"+s).value);
+if(q>0){sizes[s]=q;totalQty+=q;}
 });
 }else{
- let q=parseInt(document.getElementById("q_Q").value);
- if(q>0){sizes["Q"]=q;totalQty+=q;}
+let q=parseInt(document.getElementById("q_Q").value);
+if(q>0){sizes["Q"]=q;totalQty+=q;}
+}
+
+if(ev.type==="Bus"){
+let booked=ev.orders.reduce((a,b)=>a+Object.values(b.sizes).reduce((x,y)=>x+y,0),0);
+if(booked+totalQty>ev.seats){alert("Posti insufficienti");return;}
 }
 
 let order={
- name,
- sizes,
- total:totalQty*ev.price,
- paid:document.getElementById("paid").checked
+name,
+phone:document.getElementById("custPhone").value,
+note:document.getElementById("custNote").value,
+sizes,
+total:totalQty*ev.price,
+paid:document.getElementById("paid").checked,
+method:document.getElementById("payMethod").value
 };
 
-ev.orders.push(order);
+if(editIndex!=null){ev.orders[editIndex]=order;editIndex=null;}
+else ev.orders.push(order);
 
 save();
+renderOrders();
 document.getElementById("custName").value="";
+document.getElementById("custPhone").value="";
+document.getElementById("custNote").value="";
 document.getElementById("paid").checked=false;
 renderQuantArea();
-renderOrders();
 }
 
 function renderOrders(){
@@ -227,22 +301,94 @@ let ev=data.events[currentEvent];
 let container=document.getElementById("orders");
 container.innerHTML="";
 
-ev.orders.forEach(o=>{
+ev.orders.forEach((o,i)=>{
 container.innerHTML+=`
 <div class="orderBox">
 <div class="orderTop">
- <div>${o.name}</div>
- <div>€ ${o.total}</div>
+<div>${o.name}</div>
+<div>€ ${o.total}</div>
 </div>
 <div class="orderBottom">
- <div>${Object.entries(o.sizes).map(([k,v])=>v+" "+k).join(" - ")}</div>
- <div class="${o.paid?'statusPaid':'statusUnpaid'}">${o.paid?'PAGATO':'NON PAGATO'}</div>
+<div>${Object.entries(o.sizes).map(([k,v])=>v+" "+k).join(" - ")}</div>
+<div class="${o.paid?'statusPaid':'statusUnpaid'}">${o.paid?'PAGATO':'NON PAGATO'}</div>
+</div>
+<div class="buttonRow">
+<button class="gray" onclick="editOrder(${i})">Modifica</button>
+<button class="red" onclick="deleteOrder(${i})">Elimina</button>
 </div>
 </div>`;
 });
+renderSummary();
 }
 
+function renderSummary(){
+let ev=data.events[currentEvent];
+let totalPaid=ev.orders.filter(o=>o.paid).reduce((a,b)=>a+b.total,0);
+let totalUnpaid=ev.orders.filter(o=>!o.paid).reduce((a,b)=>a+b.total,0);
+let totalQty=ev.orders.reduce((a,b)=>a+Object.values(b.sizes).reduce((x,y)=>x+y,0),0);
+
+document.getElementById("summary").innerHTML=`
+Totale pezzi: ${totalQty}<br>
+Incassato: € ${totalPaid}<br>
+Da incassare: € ${totalUnpaid}<br>
+Totale ordini: ${ev.orders.length}
+`;
+}
+
+function editOrder(i){
+editIndex=i;
+let o=data.events[currentEvent].orders[i];
+document.getElementById("custName").value=o.name;
+document.getElementById("custPhone").value=o.phone;
+document.getElementById("custNote").value=o.note;
+document.getElementById("paid").checked=o.paid;
+document.getElementById("payMethod").value=o.method;
+renderQuantArea();
+for(let s in o.sizes){
+let el=document.getElementById("q_"+s);
+if(el)el.value=o.sizes[s];
+}
+window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function deleteOrder(i){
+if(confirm("Eliminare ordine?")){
+data.events[currentEvent].orders.splice(i,1);
+save();renderOrders();
+}
+}
+
+function toggleDark(){
+data.settings.dark=!data.settings.dark;
+save();renderHome();
+}
+
+function changePin(){
+let newPin=prompt("Nuovo PIN (4 cifre)");
+if(newPin && newPin.length===4){
+data.settings.pin=newPin;
+save();
+alert("PIN aggiornato");
+}
+}
+
+function exportData(){
+let blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="giorders_backup.json";
+a.click();
+}
+
+function importData(e){
+let reader=new FileReader();
+reader.onload=function(){
+data=JSON.parse(reader.result);
+save();
 renderHome();
+};
+reader.readAsText(e.target.files[0]);
+}
 
 </script>
 </body>
