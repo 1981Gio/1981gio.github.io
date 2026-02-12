@@ -10,6 +10,8 @@
 
 <style>
 
+/* ===== BASE ===== */
+
 body{
     margin:0;
     font-family:-apple-system,BlinkMacSystemFont,sans-serif;
@@ -24,10 +26,11 @@ body{
 
 .card{
     background:white;
-    margin:15px;
-    padding:20px;
-    border-radius:18px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.05);
+    margin:20px;
+    padding:26px;
+    border-radius:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.06);
+    transition:all .2s ease;
 }
 
 .dark .card{
@@ -37,23 +40,32 @@ body{
 h2{
     margin-top:0;
     text-align:center;
+    font-weight:700;
 }
+
+/* ===== INPUT ===== */
 
 input,select{
     width:100%;
-    padding:10px;
-    border-radius:12px;
+    padding:12px;
+    border-radius:14px;
     border:1px solid #ddd;
-    margin-bottom:10px;
+    margin-bottom:12px;
     font-size:15px;
 }
 
 button{
-    padding:10px 14px;
+    padding:11px 16px;
     border:none;
-    border-radius:12px;
+    border-radius:14px;
     font-weight:600;
     font-size:14px;
+    cursor:pointer;
+    transition:all .2s ease;
+}
+
+button:active{
+    transform:scale(0.97);
 }
 
 .primary{background:#007aff;color:white;}
@@ -67,7 +79,7 @@ button{
 #pinScreen{
     position:fixed;
     inset:0;
-    background:#007aff;
+    background:linear-gradient(160deg,#007aff,#005edb);
     display:flex;
     flex-direction:column;
     justify-content:center;
@@ -76,23 +88,24 @@ button{
 }
 
 .pin-dots{
-    font-size:28px;
-    letter-spacing:10px;
-    margin:20px 0;
+    font-size:32px;
+    letter-spacing:12px;
+    margin:25px 0;
 }
 
 .keypad{
     display:grid;
-    grid-template-columns:repeat(3,80px);
-    gap:15px;
+    grid-template-columns:repeat(3,85px);
+    gap:18px;
 }
 
 .keypad button{
-    padding:20px;
+    padding:22px;
     font-size:20px;
-    border-radius:18px;
-    background:#005edb;
+    border-radius:20px;
+    background:rgba(255,255,255,0.15);
     color:white;
+    backdrop-filter:blur(10px);
 }
 
 /* ===== SWITCH iOS ===== */
@@ -101,10 +114,15 @@ button{
     display:flex;
     justify-content:center;
     align-items:center;
-    gap:15px;
-    margin:15px 0;
+    gap:18px;
+    margin:18px 0;
     font-weight:600;
     font-size:13px;
+}
+
+.paid-label{
+    opacity:0.5;
+    transition:.3s;
 }
 
 .paid-label.left{color:#ff3b30;}
@@ -130,8 +148,10 @@ button{
 .slider:before{
     position:absolute;
     content:"";
-    height:22px;width:22px;
-    left:3px;top:3px;
+    height:22px;
+    width:22px;
+    left:3px;
+    top:3px;
     background:white;
     border-radius:50%;
     transition:.3s;
@@ -145,16 +165,32 @@ input:checked + .slider:before{
     transform:translateX(22px);
 }
 
+/* Evidenzia etichetta attiva */
+input:checked ~ .paid-label.right{
+    opacity:1;
+}
+
+input:not(:checked) ~ .paid-label.left{
+    opacity:1;
+}
+
 /* ===== ORDINI ===== */
 
 .order-box{
-    padding:10px 0;
+    padding:12px 0;
     border-bottom:1px solid #eee;
+}
+
+.order-box.editing{
+    background:#eef5ff;
+    border-radius:14px;
+    padding:14px;
 }
 
 .order-name{
     font-weight:700;
     font-size:16px;
+    margin-bottom:4px;
 }
 
 .order-row{
@@ -164,31 +200,46 @@ input:checked + .slider:before{
     font-size:14px;
 }
 
-.badge-paid{color:#34c759;font-weight:700;}
-.badge-unpaid{color:#ff3b30;font-weight:700;}
+.badge-paid{
+    color:#34c759;
+    font-weight:700;
+}
+
+.badge-unpaid{
+    color:#ff3b30;
+    font-weight:700;
+}
+
+/* ===== TAGLIE ===== */
 
 .size-row{
     display:flex;
     justify-content:space-between;
-    margin-bottom:8px;
+    align-items:center;
+    margin-bottom:10px;
 }
 
 .size-row select{
     width:80px;
 }
 
+/* ===== BARRA BUS ===== */
+
 .progress-bar{
-    height:10px;
-    background:#eee;
-    border-radius:10px;
+    height:14px;
+    background:#e5e5ea;
+    border-radius:12px;
     overflow:hidden;
-    margin-top:5px;
+    margin-top:12px;
 }
 
 .progress-fill{
     height:100%;
-    background:#34c759;
+    background:linear-gradient(90deg,#34c759,#30d158);
+    transition:width .3s ease;
 }
+
+/* ===== STAMPA ===== */
 
 @media print{
     button{display:none;}
@@ -270,9 +321,11 @@ function checkPin(){
         document.getElementById("app").classList.remove("hidden");
         renderHome();
     }else{
-        document.getElementById("pinDots").style.transform="translateX(10px)";
-        setTimeout(()=>document.getElementById("pinDots").style.transform="translateX(-10px)",100);
-        setTimeout(()=>document.getElementById("pinDots").style.transform="translateX(0px)",200);
+        // animazione errore
+        let el = document.getElementById("pinDots");
+        el.style.transform="translateX(8px)";
+        setTimeout(()=>el.style.transform="translateX(-8px)",80);
+        setTimeout(()=>el.style.transform="translateX(0px)",160);
         clearPin();
     }
 }
@@ -286,33 +339,46 @@ function renderHome(){
     document.getElementById("app").innerHTML = `
         <div class="card">
             <h2>Nuovo Evento</h2>
+
             <input id="evName" placeholder="Nome evento">
+
             <select id="evType">
                 <option value="Abbigliamento">Abbigliamento</option>
                 <option value="Gadget">Gadget</option>
                 <option value="Bus">Bus</option>
             </select>
+
             <input id="evPrice" type="number" placeholder="Prezzo €">
             <input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)">
-            <button class="primary" onclick="addEvent()">Crea Evento</button>
-            <button class="gray" onclick="toggleDark()">🌙 Modalità Scura</button>
-            <button class="gray" onclick="changePin()">🔐 Cambia PIN</button>
-            <button class="gray" onclick="exportBackup()">💾 Backup</button>
-            <input type="file" onchange="importBackup(event)">
+
+            <div style="display:grid;gap:10px;margin-top:10px;">
+                <button class="primary" onclick="addEvent()">Crea Evento</button>
+                <button class="gray" onclick="toggleDark()">🌙 Modalità Scura</button>
+                <button class="gray" onclick="changePin()">🔐 Cambia PIN</button>
+                <button class="gray" onclick="exportBackup()">💾 Backup</button>
+                <input type="file" onchange="importBackup(event)">
+            </div>
         </div>
 
         <div class="card">
             <h2>Eventi</h2>
+
             ${
                 data.events.length===0
-                ? "<p>Nessun evento creato</p>"
+                ? "<p style='text-align:center;opacity:.6;'>Nessun evento creato</p>"
                 : data.events.map((e,i)=>`
                     <div class="order-box">
                         <div class="order-row">
-                            <div><b>${e.name}</b></div>
-                            <div>${e.type}</div>
+                            <div>
+                                <div style="font-weight:700;">${e.name}</div>
+                                <div style="font-size:12px;opacity:.6;">${e.type}</div>
+                            </div>
+                            <div style="font-size:13px;">
+                                € ${e.price}
+                            </div>
                         </div>
-                        <div style="margin-top:8px;">
+
+                        <div style="margin-top:10px;display:flex;gap:8px;">
                             <button class="primary" onclick="openEvent(${i})">Apri</button>
                             <button class="danger" onclick="deleteEvent(${i})">Elimina</button>
                         </div>
@@ -323,13 +389,18 @@ function renderHome(){
     `;
 }
 
+/* ===== EVENTI ===== */
+
 function addEvent(){
     let name = document.getElementById("evName").value.trim();
     let type = document.getElementById("evType").value;
     let price = parseFloat(document.getElementById("evPrice").value) || 0;
     let seats = parseInt(document.getElementById("evSeats").value) || 0;
 
-    if(!name) return;
+    if(!name){
+        alert("Inserisci nome evento");
+        return;
+    }
 
     data.events.push({
         name,
@@ -357,11 +428,15 @@ function openEvent(i){
     renderEvent();
 }
 
+/* ===== DARK MODE ===== */
+
 function toggleDark(){
     data.settings.dark = !data.settings.dark;
     save();
     renderHome();
 }
+
+/* ===== CAMBIO PIN ===== */
 
 function changePin(){
     let newPin = prompt("Nuovo PIN a 4 cifre:");
@@ -375,7 +450,7 @@ function changePin(){
 /* ===== BACKUP ===== */
 
 function exportBackup(){
-    let blob = new Blob([JSON.stringify(data)],{type:"application/json"});
+    let blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     let a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "giorders_backup.json";
@@ -383,11 +458,18 @@ function exportBackup(){
 }
 
 function importBackup(e){
+    if(!e.target.files[0]) return;
+
     let reader = new FileReader();
     reader.onload = function(){
-        data = JSON.parse(reader.result);
-        save();
-        renderHome();
+        try{
+            data = JSON.parse(reader.result);
+            save();
+            renderHome();
+            alert("Backup ripristinato");
+        }catch{
+            alert("File non valido");
+        }
     };
     reader.readAsText(e.target.files[0]);
 }
@@ -416,9 +498,11 @@ function renderEvent(){
                 <span class="paid-label right">PAGATO</span>
             </div>
 
-            <button class="primary" onclick="saveOrder()">Salva</button>
-            <button class="gray" onclick="cancelEdit()">Annulla</button>
-            <button class="gray" onclick="renderHome()">Indietro</button>
+            <div style="display:flex;gap:8px;">
+                <button class="primary" onclick="saveOrder()">Salva</button>
+                <button class="gray" onclick="cancelEdit()">Annulla</button>
+                <button class="gray" onclick="renderHome()">Indietro</button>
+            </div>
         </div>
 
         <div class="card">
@@ -430,6 +514,8 @@ function renderEvent(){
         ${ev.type==="Abbigliamento" ? renderEmissione() : ""}
         ${ev.type==="Bus" ? renderBusBar() : ""}
     `;
+
+    window.scrollTo({top:0,behavior:"smooth"});
 }
 
 /* ===== TAGLIE ===== */
@@ -440,7 +526,7 @@ function renderSizes(){
         <div class="size-row">
             <div>${s}</div>
             <select id="size_${s}">
-                ${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`).join("")}
+                ${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="${n}">${n}</option>`).join("")}
             </select>
         </div>
     `).join("");
@@ -454,13 +540,17 @@ function saveOrder(){
     let name=document.getElementById("clientName").value.trim();
     if(!name) return;
 
-    let order={name,paid:document.getElementById("paidSwitch").checked};
+    let order={
+        name,
+        paid:document.getElementById("paidSwitch").checked
+    };
 
     if(ev.type==="Abbigliamento"){
+
         order.sizes={};
         let totalQty=0;
 
-        ["XS","S","M","L","XL","XXL"].forEach(s=>{
+        ["XS","S","M","L","XL","XXL","XXXL"].forEach(s=>{
             let q=parseInt(document.getElementById("size_"+s).value);
             if(q>0){
                 order.sizes[s]=q;
@@ -507,9 +597,11 @@ function renderOrders(){
     if(ev.orders.length===0) return "<p>Nessun ordine</p>";
 
     return ev.orders.map((o,i)=>`
-        <div class="order-box">
+        <div class="order-box ${editIndex===i?'editing':''}">
 
-            <div class="order-name">${o.name}</div>
+            <div class="order-name" onclick="editOrder(${i})" style="cursor:pointer;">
+                ${o.name}
+            </div>
 
             <div class="order-row">
                 <div>
@@ -530,14 +622,58 @@ function renderOrders(){
                 </div>
             </div>
 
-            <div style="margin-top:8px;">
-                <button onclick="editOrder(${i})">Modifica</button>
-                <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
+            <div style="margin-top:8px;display:flex;gap:6px;">
                 <button onclick="togglePaid(${i})">Toggle</button>
+                <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
             </div>
 
         </div>
     `).join("");
+}
+
+/* ===== MODIFICA ORDINE ===== */
+
+function editOrder(i){
+
+    let ev=data.events[currentEvent];
+    let o=ev.orders[i];
+
+    editIndex=i;
+
+    document.getElementById("clientName").value=o.name;
+    document.getElementById("paidSwitch").checked=o.paid;
+
+    if(o.sizes){
+        Object.keys(o.sizes).forEach(size=>{
+            document.getElementById("size_"+size).value=o.sizes[size];
+        });
+    }
+
+    if(o.qty){
+        document.getElementById("quantity").value=o.qty;
+    }
+
+    window.scrollTo({top:0,behavior:"smooth"});
+    renderEvent();
+}
+
+function cancelEdit(){
+    editIndex=null;
+    renderEvent();
+}
+
+function deleteOrder(i){
+    let ev=data.events[currentEvent];
+    ev.orders.splice(i,1);
+    save();
+    renderEvent();
+}
+
+function togglePaid(i){
+    let ev=data.events[currentEvent];
+    ev.orders[i].paid=!ev.orders[i].paid;
+    save();
+    renderEvent();
 }
 
 /* ===== STATISTICHE ===== */
@@ -577,7 +713,7 @@ function renderStatistics(){
 function renderEmissione(){
 
     let ev=data.events[currentEvent];
-    let totals={XS:0,S:0,M:0,L:0,XL:0,XXL:0};
+    let totals={XS:0,S:0,M:0,L:0,XL:0,XXL:0,XXXL:0};
 
     ev.orders.forEach(o=>{
         if(o.sizes){
@@ -633,12 +769,14 @@ function editOrder(i){
 
     if(o.sizes){
         Object.entries(o.sizes).forEach(([k,v])=>{
-            document.getElementById("size_"+k).value = v;
+            let el = document.getElementById("size_"+k);
+            if(el) el.value = v;
         });
     }
 
     if(o.qty){
-        document.getElementById("quantity").value = o.qty;
+        let q = document.getElementById("quantity");
+        if(q) q.value = o.qty;
     }
 
     window.scrollTo({top:0,behavior:"smooth"});
@@ -649,6 +787,7 @@ function editOrder(i){
 function togglePaid(i){
     data.events[currentEvent].orders[i].paid =
         !data.events[currentEvent].orders[i].paid;
+
     save();
     renderEvent();
 }
@@ -672,7 +811,11 @@ function cancelEdit(){
 
 /* ===== AVVIO APP ===== */
 
-updateDots();  // inizializza pallini PIN
+// Applica dark mode se salvata
+document.body.classList.toggle("dark", data.settings.dark);
+
+// Inizializza PIN
+updateDots();
 
 /* ===== CHIUSURA SCRIPT ===== */
 </script>
