@@ -108,13 +108,13 @@ button:active{
 }
 
 /* =============================
-   PIN SCREEN
+   PIN SCREEN ELEGANTE
 ============================= */
 
 #pinScreen{
     position:fixed;
     inset:0;
-    background:#0a84ff;
+    background:linear-gradient(180deg,#0a84ff,#0066ff);
     display:flex;
     flex-direction:column;
     justify-content:center;
@@ -123,57 +123,75 @@ button:active{
 }
 
 .pin-dots{
-    font-size:32px;
-    letter-spacing:10px;
-    margin:20px 0;
+    font-size:34px;
+    letter-spacing:14px;
+    margin:25px 0;
+    font-weight:600;
 }
 
 .keypad{
     display:grid;
-    grid-template-columns:repeat(3,80px);
-    gap:15px;
+    grid-template-columns:repeat(3,85px);
+    gap:18px;
 }
 
 .keypad button{
-    padding:20px;
-    font-size:20px;
-    border-radius:20px;
-    background:rgba(255,255,255,0.2);
+    height:70px;
+    width:70px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.18);
     color:white;
+    font-size:20px;
+    backdrop-filter:blur(10px);
+}
+
+.keypad button:active{
+    background:rgba(255,255,255,0.35);
 }
 
 /* =============================
-   ORDER LIST
+   SWITCH STILE IMPOSTAZIONI iOS
 ============================= */
 
-.order-box{
-    padding:12px 0;
-    border-bottom:1px solid #eee;
+.switch{
+    position:relative;
+    display:inline-block;
+    width:52px;
+    height:30px;
 }
 
-.order-box.editing{
-    background:#e8f1ff;
-    padding:12px;
-    border-radius:14px;
+.switch input{
+    display:none;
 }
 
-.dark .order-box{
-    border-bottom:1px solid #333;
+.slider{
+    position:absolute;
+    inset:0;
+    background:#e5e5ea;
+    border-radius:30px;
+    transition:.3s;
 }
 
-.badge-paid{
-    color:#34c759;
-    font-weight:600;
+.slider:before{
+    content:"";
+    position:absolute;
+    height:26px;
+    width:26px;
+    left:2px;
+    top:2px;
+    background:white;
+    border-radius:50%;
+    box-shadow:0 2px 6px rgba(0,0,0,0.2);
+    transition:.3s;
 }
 
-.badge-unpaid{
-    color:#ff3b30;
-    font-weight:600;
+.switch input:checked + .slider{
+    background:#34c759;
 }
 
-/* =============================
-   SIZE SELECT STYLE
-============================= */
+.switch input:checked + .slider:before{
+    transform:translateX(22px);
+}
 
 .size-row{
     display:flex;
@@ -430,12 +448,43 @@ function renderEvent(){
                 <input id="quantity" type="number" placeholder="Quantità">
             `}
 
-            <div style="display:flex;gap:8px;margin-top:10px;">
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                margin:15px 0;
+                padding:10px 0;
+                border-top:1px solid #eee;
+                border-bottom:1px solid #eee;
+            ">
+
+                <div style="font-weight:500;">
+                    Stato pagamento
+                </div>
+
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:13px;color:#ff3b30;">
+                        NON PAGATO
+                    </span>
+
+                    <label class="switch">
+                        <input type="checkbox" id="paidSwitch">
+                        <span class="slider"></span>
+                    </label>
+
+                    <span style="font-size:13px;color:#34c759;">
+                        PAGATO
+                    </span>
+                </div>
+
+            </div>
+
+            <div style="display:flex;gap:8px;">
                 <button class="primary" onclick="saveOrder()">
                     ${editIndex !== null ? "Aggiorna" : "Salva"}
                 </button>
-                <button class="gray" onclick="cancelEdit()">Annulla</button>
-                <button class="gray" onclick="renderHome()">Indietro</button>
+                <button class="secondary" onclick="cancelEdit()">Annulla</button>
+                <button class="secondary" onclick="renderHome()">Indietro</button>
             </div>
         </div>
 
@@ -450,30 +499,6 @@ function renderEvent(){
     `;
 
     window.scrollTo({top:0,behavior:"smooth"});
-}
-
-/* =============================
-   TAGLIE STRETTE E PIÙ iOS
-============================= */
-
-function renderSizes(){
-
-    let sizes = ["XS","S","M","L","XL","XXL","XXXL"];
-
-    return sizes.map(s=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div>${s}</div>
-            <select id="size_${s}" style="
-                width:70px;
-                padding:6px;
-                border-radius:12px;
-                text-align:center;">
-                ${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`
-                    <option value="${n}">${n}</option>
-                `).join("")}
-            </select>
-        </div>
-    `).join("");
 }
 /* =============================
    SALVA / AGGIORNA ORDINE
