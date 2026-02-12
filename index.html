@@ -427,13 +427,16 @@ function saveOrder(){
 
 function renderOrders(){
 
-    let ev=data.events[currentEvent];
+    let ev = data.events[currentEvent];
     if(ev.orders.length===0) return "<p>Nessun ordine</p>";
 
     return ev.orders.map((o,i)=>`
         <div class="order-box ${editIndex===i?'editing':''}">
 
-            <div class="order-name" onclick="editOrder(${i})">
+            <!-- CLICK SUL NOME PER MODIFICA -->
+            <div class="order-name"
+                 onclick="editOrder(${i})"
+                 style="cursor:pointer;">
                 ${o.name}
             </div>
 
@@ -441,21 +444,24 @@ function renderOrders(){
                 <div>
                     ${
                         ev.type==="Abbigliamento"
-                        ? Object.entries(o.sizes).map(([k,v])=>`${v} ${k}`).join(" - ")
+                        ? Object.entries(o.sizes)
+                            .map(([k,v])=>`${v} ${k}`)
+                            .join(" - ")
                         : o.qty+" pezzi"
                     }
                 </div>
 
                 <div style="text-align:right;">
                     <div><b>€ ${o.total}</b></div>
+                    <div class="${o.paid?'badge-paid':'badge-unpaid'}">
+                        ${o.paid?'PAGATO':'NON PAGATO'}
+                    </div>
                 </div>
             </div>
 
             <div style="margin-top:8px;display:flex;gap:6px;">
-                ${editIndex===null
-                    ? `<button onclick="deleteOrder(${i})" class="danger">Elimina</button>`
-                    : ""
-                }
+                <button onclick="editOrder(${i})">Modifica</button>
+                <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
             </div>
 
         </div>
