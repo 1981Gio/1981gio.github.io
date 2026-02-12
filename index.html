@@ -483,6 +483,19 @@ function renderEvent(){
         <div class="card">
             <h2>${ev.name} - €${ev.price}</h2>
 
+            ${editIndex!==null ? `
+                <div style="
+                    background:#fff3cd;
+                    padding:10px;
+                    border-radius:12px;
+                    margin-bottom:12px;
+                    font-weight:600;
+                    text-align:center;
+                ">
+                    ✏️ Modifica in corso
+                </div>
+            ` : ""}
+
             <input id="clientName" placeholder="Nome">
 
             ${ev.type === "Abbigliamento" ? renderSizes() : `
@@ -499,7 +512,9 @@ function renderEvent(){
             </div>
 
             <div style="display:flex;gap:8px;">
-                <button class="primary" onclick="saveOrder()">Salva</button>
+                <button class="primary" onclick="saveOrder()">
+                    ${editIndex!==null ? "Aggiorna" : "Salva"}
+                </button>
                 <button class="gray" onclick="cancelEdit()">Annulla</button>
                 <button class="gray" onclick="renderHome()">Indietro</button>
             </div>
@@ -532,7 +547,7 @@ function renderSizes(){
     `).join("");
 }
 
-/* ===== SALVA ORDINE ===== */
+/* ===== SALVA / AGGIORNA ORDINE ===== */
 
 function saveOrder(){
 
@@ -568,7 +583,7 @@ function saveOrder(){
 
         if(ev.type==="Bus"){
             let booked=ev.orders.reduce((a,b)=>a+(b.qty||0),0);
-            if(booked+q>ev.seats){
+            if(editIndex===null && booked+q>ev.seats){
                 alert("Posti insufficienti");
                 return;
             }
@@ -599,7 +614,9 @@ function renderOrders(){
     return ev.orders.map((o,i)=>`
         <div class="order-box ${editIndex===i?'editing':''}">
 
-            <div class="order-name" onclick="editOrder(${i})" style="cursor:pointer;">
+            <div class="order-name" 
+                 onclick="editOrder(${i})" 
+                 style="cursor:pointer;">
                 ${o.name}
             </div>
 
@@ -629,133 +646,6 @@ function renderOrders(){
 
         </div>
     `).join("");
-}
-
-/* ===== MODIFICA ORDINE ===== */
-
-function editOrder(i){
-
-    let ev=data.events[currentEvent];
-    let o=ev.orders[i];
-
-    editIndex=i;
-
-    document.getElementById("clientName").value=o.name;
-    document.getElementById("paidSwitch").checked=o.paid;
-
-    if(o.sizes){
-        Object.keys(o.sizes).forEach(size=>{
-            document.getElementById("size_"+size).value=o.sizes[size];
-        });
-    }
-
-    if(o.qty){
-        document.getElementById("quantity").value=o.qty;
-    }
-
-    window.scrollTo({top:0,behavior:"smooth"});
-    renderEvent();
-}
-
-function cancelEdit(){
-    editIndex=null;
-    renderEvent();
-}
-
-function deleteOrder(i){
-    let ev=data.events[currentEvent];
-    ev.orders.splice(i,1);
-    save();
-    renderEvent();
-}
-
-function togglePaid(i){
-    let ev=data.events[currentEvent];
-    ev.orders[i].paid=!ev.orders[i].paid;
-    save();
-    renderEvent();
-}
-
-/* ===== STATISTICHE ===== */
-
-function renderStatistics(){
-
-    let ev=data.events[currentEvent];
-
-    let totalIncasso=0;
-    let totalPagato=0;
-    let totalPezzi=0;
-
-    ev.orders.forEach(o=>{
-        totalIncasso+=o.total;
-        if(o.paid) totalPagato+=o.total;
-
-        if(o.sizes){
-            totalPezzi+=Object.values(o.sizes).reduce((a,b)=>a+b,0);
-        }else if(o.qty){
-            totalPezzi+=o.qty;
-        }
-    });
-
-    return `
-        <div class="card">
-            <h2>Riepilogo Evento</h2>
-            <div>Totale pezzi: <b>${totalPezzi}</b></div>
-            <div>Incasso totale: <b>€ ${totalIncasso}</b></div>
-            <div>Incassato: <b>€ ${totalPagato}</b></div>
-            <div>Da incassare: <b>€ ${totalIncasso-totalPagato}</b></div>
-        </div>
-    `;
-}
-
-/* ===== EMISSIONE ORDINE ===== */
-
-function renderEmissione(){
-
-    let ev=data.events[currentEvent];
-    let totals={XS:0,S:0,M:0,L:0,XL:0,XXL:0,XXXL:0};
-
-    ev.orders.forEach(o=>{
-        if(o.sizes){
-            Object.keys(totals).forEach(size=>{
-                totals[size]+=o.sizes[size]||0;
-            });
-        }
-    });
-
-    let rows=Object.entries(totals)
-        .filter(([k,v])=>v>0)
-        .map(([k,v])=>`<div>${k}: <b>${v}</b></div>`)
-        .join("");
-
-    if(!rows) return "";
-
-    return `
-        <div class="card">
-            <h2>Emissione Ordine</h2>
-            ${rows}
-            <button onclick="window.print()">Stampa</button>
-        </div>
-    `;
-}
-
-/* ===== BUS BAR ===== */
-
-function renderBusBar(){
-
-    let ev=data.events[currentEvent];
-    let booked=ev.orders.reduce((a,b)=>a+(b.qty||0),0);
-    let percent=ev.seats? (booked/ev.seats)*100 : 0;
-
-    return `
-        <div class="card">
-            <h2>Posti Bus</h2>
-            <div>${booked} / ${ev.seats} posti</div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width:${percent}%"></div>
-            </div>
-        </div>
-    `;
 }
 /* ===== MODIFICA ORDINE ===== */
 
