@@ -3,15 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>GiOrders Pro</title>
 
-<link rel="manifest" href="manifest.json">
-
 <style>
-
-/* ===== BASE ===== */
-
 body{
     margin:0;
     font-family:-apple-system,BlinkMacSystemFont;
@@ -26,7 +20,7 @@ body{
 .card{
     background:white;
     margin:20px;
-    padding:24px;
+    padding:20px;
     border-radius:18px;
     box-shadow:0 5px 20px rgba(0,0,0,0.08);
 }
@@ -35,115 +29,64 @@ body{
     background:#1c1c1e;
 }
 
-h1,h2{
-    text-align:center;
-    margin-bottom:20px;
-}
+h2{text-align:center;}
 
 input,select{
     width:100%;
-    padding:14px;
+    padding:12px;
     border-radius:12px;
     border:1px solid #ddd;
-    margin-bottom:14px;
-    font-size:16px;
+    margin-bottom:12px;
 }
 
 button{
-    padding:12px 18px;
+    padding:10px 14px;
     border:none;
     border-radius:12px;
-    font-size:15px;
+    font-weight:600;
     cursor:pointer;
 }
 
-.primary{
-    background:#007aff;
-    color:white;
-}
+.primary{background:#007aff;color:white;}
+.gray{background:#d1d1d6;}
+.danger{background:#ff3b30;color:white;}
 
-.gray{
-    background:#d1d1d6;
-}
-
-.danger{
-    background:#ff3b30;
-    color:white;
-}
-
-/* ===== HOME ARIOSA ===== */
-
-.btn-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-}
-
-.event-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:14px 0;
-    border-bottom:1px solid #eee;
-}
-
-.event-actions{
-    display:flex;
-    gap:10px;
-}
-
-/* ===== SWITCH PAGAMENTO ===== */
+.hidden{display:none}
 
 .paid-container{
     display:flex;
-    align-items:center;
     justify-content:center;
-    gap:14px;
-    margin:20px 0;
-    font-weight:600;
-    font-size:14px;
+    align-items:center;
+    gap:12px;
+    margin:15px 0;
 }
-
-.paid-label{
-    opacity:0.5;
-    transition:0.3s;
-}
-
-.paid-label.left{ color:#ff3b30; }
-.paid-label.right{ color:#34c759; }
 
 .switch{
     position:relative;
-    display:inline-block;
     width:50px;
     height:28px;
 }
 
-.switch input{
-    opacity:0;
-    width:0;
-    height:0;
-}
+.switch input{display:none;}
 
 .slider{
     position:absolute;
-    cursor:pointer;
-    top:0; left:0; right:0; bottom:0;
+    inset:0;
     background:#ccc;
-    transition:.4s;
     border-radius:34px;
+    transition:.3s;
 }
 
 .slider:before{
-    position:absolute;
     content:"";
+    position:absolute;
     height:22px;
     width:22px;
     left:3px;
-    bottom:3px;
+    top:3px;
     background:white;
-    transition:.4s;
     border-radius:50%;
+    transition:.3s;
 }
 
 input:checked + .slider{
@@ -154,7 +97,13 @@ input:checked + .slider:before{
     transform:translateX(22px);
 }
 
-/* ===== PIN APP STYLE ===== */
+.order-box{
+    border-bottom:1px solid #eee;
+    padding:10px 0;
+}
+
+.badge-paid{color:#34c759;font-weight:bold;}
+.badge-unpaid{color:#ff3b30;font-weight:bold;}
 
 .pinScreen{
     display:flex;
@@ -165,59 +114,41 @@ input:checked + .slider:before{
 }
 
 .pinDisplay{
-    font-size:34px;
+    font-size:30px;
     letter-spacing:10px;
-    margin-bottom:30px;
+    margin-bottom:20px;
 }
 
 .keypad{
     display:grid;
-    grid-template-columns:repeat(3,80px);
-    gap:16px;
+    grid-template-columns:repeat(3,70px);
+    gap:15px;
 }
 
 .keypad button{
-    font-size:20px;
     padding:18px;
     border-radius:50%;
-    background:#e5e5ea;
 }
-
-.hidden{ display:none }
-
-@media print{
-    button{ display:none }
-}
-
 </style>
 </head>
-
 <body>
 
 <div id="pinScreen" class="pinScreen"></div>
 <div id="app" class="hidden"></div>
 
 <script>
-/* ===== DATI ===== */
-
-let data = JSON.parse(localStorage.getItem("giordersPro")) || {
-    settings:{
-        pin:"1926",
-        dark:false
-    },
+let data = JSON.parse(localStorage.getItem("giorders")) || {
+    settings:{ pin:"1926", dark:false },
     events:[]
 };
 
 let currentEvent = null;
 let tempPin = "";
-
-/* ===== SALVATAGGIO ===== */
+let editIndex = null;
 
 function saveData(){
-    localStorage.setItem("giordersPro", JSON.stringify(data));
+    localStorage.setItem("giorders", JSON.stringify(data));
 }
-
-/* ===== PIN SCREEN ===== */
 
 function renderPin(){
     document.getElementById("pinScreen").innerHTML = `
@@ -255,32 +186,21 @@ function checkPin(){
     }
 }
 
-/* ===== HOME ===== */
-
 function renderHome(){
     document.getElementById("app").innerHTML = `
     <div class="card">
         <h2>Nuovo Evento</h2>
-
         <input id="evName" placeholder="Nome evento">
-
         <select id="evType">
             <option value="Abbigliamento">Abbigliamento</option>
             <option value="Gadget">Gadget</option>
             <option value="Bus">Bus</option>
         </select>
-
         <input id="evPrice" type="number" placeholder="Prezzo €">
         <input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)">
-
-        <div class="btn-grid">
-            <button class="primary" onclick="createEvent()">Crea Evento</button>
-            <button class="gray" onclick="toggleDark()">🌙 Modalità</button>
-            <button class="gray" onclick="changePin()">🔐 Cambia PIN</button>
-            <button class="gray" onclick="exportBackup()">💾 Backup</button>
-        </div>
-
-        <input type="file" onchange="importBackup(event)">
+        <button class="primary" onclick="createEvent()">Crea Evento</button>
+        <button class="gray" onclick="toggleDark()">🌙 Modalità</button>
+        <button class="gray" onclick="changePin()">🔐 Cambia PIN</button>
     </div>
 
     <div class="card">
@@ -290,8 +210,6 @@ function renderHome(){
     `;
 }
 
-/* ===== EVENTI ===== */
-
 function createEvent(){
     let name=document.getElementById("evName").value;
     let type=document.getElementById("evType").value;
@@ -300,14 +218,7 @@ function createEvent(){
 
     if(!name) return alert("Inserisci nome evento");
 
-    data.events.push({
-        name,
-        type,
-        price,
-        seats,
-        orders:[]
-    });
-
+    data.events.push({ name,type,price,seats,orders:[] });
     saveData();
     renderHome();
 }
@@ -316,12 +227,9 @@ function renderEventList(){
     if(data.events.length===0) return "Nessun evento";
 
     return data.events.map((ev,i)=>`
-        <div class="event-row">
-            <div>
-                <strong>${ev.name}</strong><br>
-                <small>${ev.type}</small>
-            </div>
-            <div class="event-actions">
+        <div class="order-box">
+            <strong>${ev.name}</strong> (${ev.type})
+            <div style="margin-top:8px">
                 <button class="primary" onclick="openEvent(${i})">Apri</button>
                 <button class="danger" onclick="deleteEvent(${i})">Elimina</button>
             </div>
@@ -331,6 +239,7 @@ function renderEventList(){
 
 function openEvent(i){
     currentEvent=i;
+    editIndex=null;
     renderEvent();
 }
 
@@ -342,15 +251,11 @@ function deleteEvent(i){
     }
 }
 
-/* ===== DARK MODE ===== */
-
 function toggleDark(){
-    data.settings.dark=!data.settings.dark;
     document.body.classList.toggle("dark");
+    data.settings.dark=!data.settings.dark;
     saveData();
 }
-
-/* ===== CAMBIO PIN ===== */
 
 function changePin(){
     let newPin=prompt("Nuovo PIN 4 cifre");
@@ -360,36 +265,28 @@ function changePin(){
         alert("PIN aggiornato");
     }
 }
-/* ===== PAGINA EVENTO ===== */
-
 function renderEvent(){
-    let ev = data.events[currentEvent];
+    let ev=data.events[currentEvent];
 
-    document.getElementById("app").innerHTML = `
+    document.getElementById("app").innerHTML=`
     <div class="card">
-        <h2 style="text-align:center">${ev.name} - €${ev.price}</h2>
+        <h2>${ev.name} - €${ev.price}</h2>
 
         <input id="clientName" placeholder="Nome">
 
-        ${ev.type==="Abbigliamento" ? renderSizes() : `
-            <input id="quantity" type="number" placeholder="Quantità">
-        `}
+        ${ev.type==="Abbigliamento"?renderSizes():`<input id="quantity" type="number" placeholder="Quantità">`}
 
         <div class="paid-container">
-            <span class="paid-label left">NON PAGATO</span>
-
+            <span style="color:#ff3b30">NON PAGATO</span>
             <label class="switch">
                 <input type="checkbox" id="paidSwitch">
                 <span class="slider"></span>
             </label>
-
-            <span class="paid-label right">PAGATO</span>
+            <span style="color:#34c759">PAGATO</span>
         </div>
 
-        <div style="display:flex;gap:10px;margin-top:15px">
-            <button class="primary" style="flex:1" onclick="saveOrder()">Salva</button>
-            <button class="gray" onclick="renderHome()">Indietro</button>
-        </div>
+        <button class="primary" onclick="saveOrder()">Salva</button>
+        <button class="gray" onclick="renderHome()">Indietro</button>
     </div>
 
     <div class="card">
@@ -404,13 +301,10 @@ function renderEvent(){
     `;
 }
 
-/* ===== TAGLIE ===== */
-
 function renderSizes(){
     const sizes=["XS","S","M","L","XL","XXL","XXXL"];
-
     return sizes.map(s=>`
-        <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0">
+        <div style="display:flex;justify-content:space-between;margin:6px 0">
             <span>${s}</span>
             <select id="size_${s}" style="width:70px">
                 ${Array.from({length:21},(_,i)=>`<option value="${i}">${i}</option>`).join("")}
@@ -419,25 +313,19 @@ function renderSizes(){
     `).join("");
 }
 
-/* ===== SALVA ORDINE ===== */
-
 function saveOrder(){
-    let ev = data.events[currentEvent];
-    let name = document.getElementById("clientName").value;
-    let paid = document.getElementById("paidSwitch").checked;
+    let ev=data.events[currentEvent];
+    let name=document.getElementById("clientName").value;
+    let paid=document.getElementById("paidSwitch").checked;
 
     if(!name) return alert("Inserisci nome");
 
-    let order = {
-        name,
-        paid,
-        items:{}
-    };
+    let order={ name, paid, items:{} };
 
     if(ev.type==="Abbigliamento"){
         ["XS","S","M","L","XL","XXL","XXXL"].forEach(s=>{
-            let qty=parseInt(document.getElementById("size_"+s).value)||0;
-            if(qty>0) order.items[s]=qty;
+            let q=parseInt(document.getElementById("size_"+s).value)||0;
+            if(q>0) order.items[s]=q;
         });
     }else{
         let q=parseInt(document.getElementById("quantity").value)||0;
@@ -448,40 +336,32 @@ function saveOrder(){
     saveData();
     renderEvent();
 }
-
-/* ===== RENDER ORDINI ===== */
-
 function renderOrders(){
     let ev=data.events[currentEvent];
     if(ev.orders.length===0) return "Nessun ordine";
 
     return ev.orders.map((o,i)=>`
-        <div style="margin-bottom:15px;border-bottom:1px solid #ddd;padding-bottom:10px">
+        <div class="order-box">
             <strong>${o.name}</strong><br>
-            ${renderOrderItems(o)}
-            € ${calculateTotal(o)} - 
-            <span style="color:${o.paid?"#2ecc71":"#ff3b30"}">
-                ${o.paid?"PAGATO":"NON PAGATO"}
+            ${Object.keys(o.items).map(k=>`${o.items[k]} ${k}`).join(" - ")}
+            <br>
+            € ${calculateTotal(o)} -
+            <span class="${o.paid?'badge-paid':'badge-unpaid'}">
+                ${o.paid?'PAGATO':'NON PAGATO'}
             </span>
             <div style="margin-top:8px">
-                <button class="gray" onclick="togglePaid(${i})">Toggle</button>
+                <button onclick="togglePaid(${i})">Toggle</button>
                 <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
             </div>
         </div>
     `).join("");
 }
 
-function renderOrderItems(order){
-    return Object.keys(order.items).map(k=>`${order.items[k]} ${k}`).join(" - ");
-}
-
-function calculateTotal(order){
+function calculateTotal(o){
     let ev=data.events[currentEvent];
-    let total=0;
-    Object.values(order.items).forEach(q=>{
-        total+=q*ev.price;
-    });
-    return total;
+    let tot=0;
+    Object.values(o.items).forEach(q=>tot+=q*ev.price);
+    return tot;
 }
 
 function togglePaid(i){
@@ -498,8 +378,6 @@ function deleteOrder(i){
     renderEvent();
 }
 
-/* ===== EMISSIONE ORDINE ===== */
-
 function renderEmission(){
     let ev=data.events[currentEvent];
     let totals={};
@@ -515,46 +393,6 @@ function renderEmission(){
     return Object.keys(totals).map(k=>`
         <div>${k}: ${totals[k]} pezzi</div>
     `).join("");
-}
-/* ===== BACKUP / RIPRISTINO ===== */
-
-function exportBackup(){
-    const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "giorders_backup.json";
-    a.click();
-}
-
-document.getElementById("importFile").addEventListener("change",function(e){
-    const file = e.target.files[0];
-    if(!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(evt){
-        data = JSON.parse(evt.target.result);
-        saveData();
-        renderHome();
-        alert("Backup ripristinato");
-    };
-    reader.readAsText(file);
-});
-
-/* ===== CAMBIO PIN ===== */
-
-function changePin(){
-    let newPin = prompt("Nuovo PIN:");
-    if(newPin && newPin.length>=4){
-        data.settings.pin=newPin;
-        saveData();
-        alert("PIN aggiornato");
-    }
-}
-
-/* ===== AVVIO APP ===== */
-
-if(data.settings.dark){
-    document.body.classList.add("dark");
 }
 
 renderPin();
