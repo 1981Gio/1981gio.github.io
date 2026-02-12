@@ -1,134 +1,98 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GiOrders Pro</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0A84FF">
-
 <style>
 body{
-    font-family:-apple-system,BlinkMacSystemFont;
-    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,sans-serif;
     background:#f2f2f7;
+    margin:0;
+    padding:15px;
 }
 
 .dark{
-    background:#1c1c1e;
+    background:#111;
     color:white;
 }
 
 .card{
     background:white;
-    margin:18px;
-    padding:20px;
-    border-radius:20px;
-    box-shadow:0 6px 20px rgba(0,0,0,.05);
+    padding:18px;
+    border-radius:18px;
+    margin-bottom:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.05);
 }
 
 .dark .card{
-    background:#2c2c2e;
+    background:#1c1c1e;
 }
 
 h2{
-    margin-top:0;
     text-align:center;
+    margin-top:0;
 }
 
 input,select{
     width:100%;
     padding:10px;
     border-radius:12px;
-    border:1px solid #d1d1d6;
-    font-size:15px;
-    margin-bottom:12px;
-}
-
-.sizeRow{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:8px;
-}
-
-.sizeRow select{
-    width:80px;
-    padding:4px;
-    font-size:14px;
+    border:1px solid #ddd;
+    margin-bottom:10px;
 }
 
 button{
-    padding:10px 14px;
-    border-radius:12px;
+    padding:10px;
     border:none;
-    font-size:14px;
-    cursor:pointer;
-}
-
-.primary{background:#0A84FF;color:white}
-.gray{background:#d1d1d6}
-.red{background:#ff3b30;color:white}
-
-.orderBox{
-    border-top:1px solid #e5e5ea;
-    padding-top:12px;
-    margin-top:12px;
-}
-
-.orderTop{
-    display:flex;
-    justify-content:space-between;
+    border-radius:12px;
     font-weight:600;
 }
 
-.orderBottom{
-    display:flex;
-    justify-content:space-between;
-    font-size:14px;
-    margin-top:4px;
+.primary{
+    background:#007aff;
+    color:white;
 }
 
-.statusPaid{color:#34c759;font-weight:600}
-.statusUnpaid{color:#ff3b30;font-weight:600}
+.gray{
+    background:#d1d1d6;
+}
 
-/* SWITCH iOS */
+.danger{
+    background:#ff3b30;
+    color:white;
+}
+
+.hidden{display:none}
+
+/* SWITCH iPhone */
 .switch{
     position:relative;
     display:inline-block;
-    width:46px;
-    height:26px;
+    width:50px;
+    height:28px;
 }
 
-.switch input{
-    opacity:0;
-    width:0;
-    height:0;
-}
+.switch input{display:none;}
 
 .slider{
     position:absolute;
     cursor:pointer;
-    top:0;
-    left:0;
-    right:0;
-    bottom:0;
-    background-color:#ccc;
-    transition:.3s;
+    top:0;left:0;right:0;bottom:0;
+    background:#ccc;
     border-radius:34px;
+    transition:.3s;
 }
 
 .slider:before{
     position:absolute;
     content:"";
-    height:20px;
-    width:20px;
-    left:3px;
-    bottom:3px;
+    height:22px;width:22px;
+    left:3px;bottom:3px;
     background:white;
-    transition:.3s;
     border-radius:50%;
+    transition:.3s;
 }
 
 input:checked + .slider{
@@ -136,136 +100,76 @@ input:checked + .slider{
 }
 
 input:checked + .slider:before{
-    transform:translateX(20px);
+    transform:translateX(22px);
 }
-
-.pinScreen{
-    position:fixed;
-    inset:0;
-    background:#0A84FF;
-    color:white;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-}
-
-.keypad{
-    display:grid;
-    grid-template-columns:repeat(3,70px);
-    gap:12px;
-    margin-top:20px;
-}
-
-.keypad button{
-    padding:18px;
-    font-size:20px;
-    background:#004aad;
-    color:white;
-}
-
-.hidden{display:none}
-
-@media print{
-    button{display:none}
-}
-/* ===== SWITCH PAGAMENTO ===== */
 
 .paid-container{
     display:flex;
-    align-items:center;
     justify-content:center;
-    gap:16px;
-    margin:18px 0;
+    align-items:center;
+    gap:15px;
+    margin:15px 0;
     font-size:13px;
     font-weight:600;
 }
 
-.paid-label{
-    opacity:0.5;
-    transition:0.3s;
+.paid-label.left{color:#ff3b30;}
+.paid-label.right{color:#34c759;}
+
+.size-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
 }
 
-.paid-label.left{
-    color:#ff3b30;
+.size-row select{
+    width:80px;
 }
 
-.paid-label.right{
-    color:#34C759;
+.order-row{
+    padding:10px 0;
+    border-bottom:1px solid #eee;
 }
 
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 46px;
-    height: 26px;
+.order-header{
+    display:flex;
+    justify-content:space-between;
+    font-weight:600;
 }
 
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
+.order-sub{
+    display:flex;
+    justify-content:space-between;
+    font-size:14px;
 }
 
-.slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #e5e5ea;
-    transition: .3s;
-    border-radius: 26px;
+.badge-paid{color:#34c759;font-weight:700;}
+.badge-unpaid{color:#ff3b30;font-weight:700;}
+
+.keypad{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
 }
 
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 20px;
-    width: 20px;
-    left: 3px;
-    top: 3px;
-    background-color: white;
-    transition: .3s;
-    border-radius: 50%;
+.keypad button{
+    font-size:20px;
+    padding:15px;
 }
 
-input:checked + .slider {
-    background-color: #34C759;
-}
-
-input:checked + .slider:before {
-    transform: translateX(20px);
-}
 </style>
 </head>
 
 <body>
 
-<div id="pinScreen" class="pinScreen">
-    <h2>Inserisci PIN</h2>
-    <div id="pinDisplay" style="font-size:32px;letter-spacing:10px;margin:20px">----</div>
-    <div class="keypad">
-        <button onclick="pressPin(1)">1</button>
-        <button onclick="pressPin(2)">2</button>
-        <button onclick="pressPin(3)">3</button>
-        <button onclick="pressPin(4)">4</button>
-        <button onclick="pressPin(5)">5</button>
-        <button onclick="pressPin(6)">6</button>
-        <button onclick="pressPin(7)">7</button>
-        <button onclick="pressPin(8)">8</button>
-        <button onclick="pressPin(9)">9</button>
-        <button onclick="clearPin()">C</button>
-        <button onclick="pressPin(0)">0</button>
-        <button onclick="checkPin()">OK</button>
-    </div>
-</div>
-
+<div id="pinScreen"></div>
 <div id="app" class="hidden"></div>
 
 <script>
+/* ===== STRUTTURA DATI ===== */
 
-/* ---------- STRUTTURA DATI STABILE ---------- */
-
-let data = JSON.parse(localStorage.getItem("giorders_pro_v1")) || {
+let data = JSON.parse(localStorage.getItem("giorders_pro")) || {
     settings:{
         pin:"1926",
         dark:false
@@ -277,23 +181,39 @@ let currentEvent = null;
 let editIndex = null;
 let tempPin = "";
 
+/* ===== SALVATAGGIO ===== */
+
 function save(){
-    localStorage.setItem("giorders_pro_v1", JSON.stringify(data));
+    localStorage.setItem("giorders_pro", JSON.stringify(data));
 }
 
-/* ---------- PIN ---------- */
+/* ===== PIN ===== */
+
+function renderPin(){
+    document.getElementById("pinScreen").innerHTML = `
+        <div class="card">
+            <h2>Inserisci PIN</h2>
+            <div id="pinDisplay" style="text-align:center;font-size:28px;letter-spacing:8px;margin:15px 0;">----</div>
+            <div class="keypad">
+                ${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="pressPin(${n})">${n}</button>`).join("")}
+                <button onclick="clearPin()">C</button>
+                <button onclick="pressPin(0)">0</button>
+                <button onclick="checkPin()">OK</button>
+            </div>
+        </div>
+    `;
+}
 
 function pressPin(n){
-    if(tempPin.length<4){
+    if(tempPin.length < 4){
         tempPin += n;
-        document.getElementById("pinDisplay").innerText =
-            tempPin.padEnd(4,"-");
+        document.getElementById("pinDisplay").innerText = tempPin.padEnd(4,"-");
     }
 }
 
 function clearPin(){
-    tempPin="";
-    document.getElementById("pinDisplay").innerText="----";
+    tempPin = "";
+    document.getElementById("pinDisplay").innerText = "----";
 }
 
 function checkPin(){
@@ -306,439 +226,319 @@ function checkPin(){
         clearPin();
     }
 }
-/* ---------- HOME ---------- */
+
+/* ===== HOME ===== */
 
 function renderHome(){
 
-document.getElementById("app").innerHTML = `
+    document.body.classList.toggle("dark", data.settings.dark);
 
-<div class="card">
-<h2>Nuovo Evento</h2>
+    document.getElementById("app").innerHTML = `
+        <div class="card">
+            <h2>Nuovo Evento</h2>
+            <input id="evName" placeholder="Nome evento">
+            <select id="evType">
+                <option value="Abbigliamento">Abbigliamento</option>
+                <option value="Gadget">Gadget</option>
+                <option value="Bus">Bus</option>
+            </select>
+            <input id="evPrice" type="number" placeholder="Prezzo €">
+            <input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)">
+            <button class="primary" onclick="addEvent()">Crea Evento</button>
+            <button class="gray" onclick="toggleDark()">🌙 Modalità Scura</button>
+        </div>
 
-<input id="evName" placeholder="Nome evento">
-
-<select id="evType">
-<option value="Abbigliamento">Abbigliamento</option>
-<option value="Gadget">Gadget</option>
-<option value="Bus">Bus</option>
-</select>
-
-<input id="evPrice" type="number" placeholder="Prezzo €">
-<input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)">
-
-<div style="display:flex;gap:10px">
-<button class="primary" style="flex:1" onclick="addEvent()">Crea</button>
-<button class="gray" onclick="toggleDark()">🌙</button>
-</div>
-
-</div>
-
-<div class="card">
-<h2>Eventi</h2>
-
-${data.events.length === 0 ? 
-`<div style="opacity:.6">Nessun evento creato</div>` :
-data.events.map((e,i)=>`
-<div class="orderBox">
-<div class="orderTop">
-<div>${e.name}</div>
-<div>${e.type}</div>
-</div>
-<div style="margin-top:8px">
-<button class="primary" onclick="openEvent(${i})">Apri</button>
-<button class="red" onclick="deleteEvent(${i})">Elimina</button>
-</div>
-</div>
-`).join("")
+        <div class="card">
+            <h2>Eventi</h2>
+            ${
+                data.events.length === 0
+                ? "<p>Nessun evento creato</p>"
+                : data.events.map((e,i)=>`
+                    <div class="order-row">
+                        <div class="order-header">
+                            <div>${e.name}</div>
+                            <div>${e.type}</div>
+                        </div>
+                        <div style="margin-top:8px;">
+                            <button class="primary" onclick="openEvent(${i})">Apri</button>
+                            <button class="danger" onclick="deleteEvent(${i})">Elimina</button>
+                        </div>
+                    </div>
+                `).join("")
+            }
+        </div>
+    `;
 }
-
-</div>
-
-`;
-
-if(data.settings.dark){
-document.body.classList.add("dark");
-}else{
-document.body.classList.remove("dark");
-}
-
-}
-
-/* ---------- CREA EVENTO ---------- */
 
 function addEvent(){
-let name = document.getElementById("evName").value.trim();
-let type = document.getElementById("evType").value;
-let price = parseFloat(document.getElementById("evPrice").value) || 0;
-let seats = parseInt(document.getElementById("evSeats").value) || 0;
+    let name = document.getElementById("evName").value.trim();
+    let type = document.getElementById("evType").value;
+    let price = parseFloat(document.getElementById("evPrice").value) || 0;
+    let seats = parseInt(document.getElementById("evSeats").value) || 0;
 
-if(!name) return;
+    if(!name) return;
 
-data.events.push({
-    name,
-    type,
-    price,
-    seats,
-    orders:[]
-});
+    data.events.push({
+        name,
+        type,
+        price,
+        seats,
+        orders:[]
+    });
 
-save();
-renderHome();
-}
-
-/* ---------- ELIMINA EVENTO ---------- */
-
-function deleteEvent(i){
-if(confirm("Eliminare evento?")){
-    data.events.splice(i,1);
     save();
     renderHome();
 }
-}
 
-/* ---------- APRI EVENTO ---------- */
+function deleteEvent(i){
+    if(confirm("Eliminare evento?")){
+        data.events.splice(i,1);
+        save();
+        renderHome();
+    }
+}
 
 function openEvent(i){
-currentEvent = i;
-editIndex = null;
-renderEvent();
+    currentEvent = i;
+    editIndex = null;
+    renderEvent();
 }
 
-/* ---------- PAGINA EVENTO ---------- */
+function toggleDark(){
+    data.settings.dark = !data.settings.dark;
+    save();
+    renderHome();
+}
+/* ===== PAGINA EVENTO ===== */
 
 function renderEvent(){
 
-let ev = data.events[currentEvent];
+    let ev = data.events[currentEvent];
 
-document.getElementById("app").innerHTML = `
+    document.getElementById("app").innerHTML = `
+        <div class="card">
+            <h2>${ev.name} - €${ev.price}</h2>
 
-<div class="card">
-<h2>${ev.name} - €${ev.price}</h2>
+            <input id="clientName" placeholder="Nome">
 
-<input id="clientName" placeholder="Nome">
+            ${ev.type === "Abbigliamento" ? renderSizes() : `
+                <input id="quantity" type="number" placeholder="Quantità">
+            `}
 
-${ev.type === "Abbigliamento" ? renderSizes() : `
-<input id="quantity" type="number" placeholder="Quantità">
-`}
-<div class="paid-container">
-  <span class="paid-label left">NON PAGATO</span>
+            <div class="paid-container">
+                <span class="paid-label left">NON PAGATO</span>
 
-  <label class="switch">
-    <input type="checkbox" id="paidSwitch">
-    <span class="slider"></span>
-  </label>
+                <label class="switch">
+                    <input type="checkbox" id="paidSwitch">
+                    <span class="slider"></span>
+                </label>
 
-  <span class="paid-label right">PAGATO</span>
-</div>
+                <span class="paid-label right">PAGATO</span>
+            </div>
 
-<div style="display:flex;gap:10px">
-<button class="primary" style="flex:1" onclick="saveOrder()">Salva</button>
-<button class="gray" onclick="cancelEdit()">Annulla</button>
-<button class="gray" onclick="renderHome()">Indietro</button>
-</div>
+            <button class="primary" onclick="saveOrder()">Salva</button>
+            <button class="gray" onclick="cancelEdit()">Annulla</button>
+            <button class="gray" onclick="renderHome()">Indietro</button>
+        </div>
 
-</div>
+        <div class="card">
+            <h2>Ordini</h2>
+            ${renderOrders()}
+            <button class="gray" onclick="toggleEmissione()">Emissione Ordine</button>
+        </div>
 
-<div class="card">
-<h2>Ordini</h2>
-${renderOrders()}
-</div>
-
-`;
-
+        ${renderEmissione()}
+    `;
 }
 
-/* ---------- TAGLIE ---------- */
+/* ===== TAGLIE ===== */
 
 function renderSizes(){
-let sizes = ["XS","S","M","L","XL","XXL"];
-return sizes.map(s=>`
-<div class="sizeRow">
-<div>${s}</div>
-<select id="size_${s}">
-${[0,1,2,3,4,5,6,7,8,9,10]
-.map(n=>`<option>${n}</option>`).join("")}
-</select>
-</div>
-`).join("");
+    let sizes = ["XS","S","M","L","XL","XXL"];
+    return sizes.map(s=>`
+        <div class="size-row">
+            <div>${s}</div>
+            <select id="size_${s}">
+                ${[0,1,2,3,4,5,6,7,8,9,10]
+                    .map(n=>`<option>${n}</option>`).join("")}
+            </select>
+        </div>
+    `).join("");
 }
 
-/* ---------- SALVA ORDINE ---------- */
+/* ===== SALVA ORDINE ===== */
 
 function saveOrder(){
 
-let ev = data.events[currentEvent];
-let name = document.getElementById("clientName").value.trim();
-if(!name) return;
+    let ev = data.events[currentEvent];
+    let name = document.getElementById("clientName").value.trim();
+    if(!name) return;
 
-let order = { name, paid: document.getElementById("paidSwitch").checked };
+    let order = {
+        name,
+        paid: document.getElementById("paidSwitch").checked
+    };
 
-if(ev.type === "Abbigliamento"){
-order.sizes = {};
-let totalQty = 0;
+    if(ev.type === "Abbigliamento"){
+        order.sizes = {};
+        let totalQty = 0;
 
-["XS","S","M","L","XL","XXL"].forEach(s=>{
-let q = parseInt(document.getElementById("size_"+s).value);
-if(q>0){
-order.sizes[s] = q;
-totalQty += q;
+        ["XS","S","M","L","XL","XXL"].forEach(s=>{
+            let q = parseInt(document.getElementById("size_"+s).value);
+            if(q > 0){
+                order.sizes[s] = q;
+                totalQty += q;
+            }
+        });
+
+        if(totalQty === 0) return;
+        order.total = totalQty * ev.price;
+
+    } else {
+
+        let q = parseInt(document.getElementById("quantity").value) || 0;
+        if(q === 0) return;
+
+        if(ev.type === "Bus"){
+            let booked = ev.orders.reduce((a,b)=>a+(b.qty||0),0);
+            if(booked + q > ev.seats){
+                alert("Posti insufficienti");
+                return;
+            }
+        }
+
+        order.qty = q;
+        order.total = q * ev.price;
+    }
+
+    if(editIndex !== null){
+        ev.orders[editIndex] = order;
+        editIndex = null;
+    } else {
+        ev.orders.push(order);
+    }
+
+    save();
+    renderEvent();
 }
-});
 
-if(totalQty === 0) return;
-
-order.total = totalQty * ev.price;
-
-}else{
-
-let q = parseInt(document.getElementById("quantity").value) || 0;
-if(q === 0) return;
-
-if(ev.type === "Bus"){
-let booked = ev.orders.reduce((a,b)=>a+(b.qty||0),0);
-if(booked + q > ev.seats){
-alert("Posti insufficienti");
-return;
-}
-}
-
-order.qty = q;
-order.total = q * ev.price;
-
-}
-
-if(editIndex !== null){
-ev.orders[editIndex] = order;
-editIndex = null;
-}else{
-ev.orders.push(order);
-}
-
-save();
-renderEvent();
-}
-
-/* ---------- RENDER ORDINI ---------- */
+/* ===== RENDER ORDINI ===== */
 
 function renderOrders(){
 
-let ev = data.events[currentEvent];
+    let ev = data.events[currentEvent];
 
-if(ev.orders.length === 0)
-return "<div style='opacity:.6'>Nessun ordine</div>";
+    if(ev.orders.length === 0)
+        return "<p>Nessun ordine</p>";
 
-return ev.orders.map((o,i)=>`
-
-<div class="orderBox ${editIndex===i?'highlight':''}">
-
-<div class="orderTop">
-<div>${o.name}</div>
-<div>€ ${o.total}</div>
-</div>
-
-<div class="orderBottom">
-<div>
-${ev.type==="Abbigliamento" ?
-Object.entries(o.sizes)
-.map(([k,v])=>`${v} ${k}`)
-.join(" - ")
-:
-o.qty + " pezzi"
-}
-</div>
-
-<div class="${o.paid?'statusPaid':'statusUnpaid'}">
-${o.paid?'PAGATO':'NON PAGATO'}
-</div>
-</div>
-
-<div style="margin-top:8px">
-<button onclick="editOrder(${i})">Modifica</button>
-<button class="red" onclick="deleteOrder(${i})">Elimina</button>
-<button onclick="togglePaid(${i})">Toggle</button>
-</div>
-
-</div>
-
-`).join("");
+    return ev.orders.map((o,i)=>`
+        <div class="order-row">
+            <div class="order-header">
+                <div>${o.name}</div>
+                <div>€ ${o.total}</div>
+            </div>
+            <div class="order-sub">
+                <div>
+                    ${
+                        ev.type==="Abbigliamento"
+                        ? Object.entries(o.sizes)
+                            .map(([k,v])=>`${v} ${k}`)
+                            .join(" - ")
+                        : o.qty + " pezzi"
+                    }
+                </div>
+                <div class="${o.paid?'badge-paid':'badge-unpaid'}">
+                    ${o.paid?'PAGATO':'NON PAGATO'}
+                </div>
+            </div>
+            <div style="margin-top:6px;">
+                <button onclick="editOrder(${i})">Modifica</button>
+                <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
+                <button onclick="togglePaid(${i})">Toggle</button>
+            </div>
+        </div>
+    `).join("");
 }
 
-/* ---------- MODIFICA ---------- */
+/* ===== EMISSIONE ORDINE ===== */
+
+function toggleEmissione(){
+    let box = document.getElementById("emissioneBox");
+    if(box) box.classList.toggle("hidden");
+}
+
+function renderEmissione(){
+
+    let ev = data.events[currentEvent];
+    let totals = {XS:0,S:0,M:0,L:0,XL:0,XXL:0};
+
+    ev.orders.forEach(o=>{
+        if(o.sizes){
+            Object.keys(totals).forEach(size=>{
+                totals[size] += o.sizes[size] || 0;
+            });
+        }
+    });
+
+    return `
+        <div id="emissioneBox" class="card hidden">
+            <h2>Emissione Ordine</h2>
+            ${Object.entries(totals).map(([k,v])=>`
+                <div>${k}: <b>${v}</b></div>
+            `).join("")}
+        </div>
+    `;
+}
+
+/* ===== MODIFICA ===== */
 
 function editOrder(i){
-editIndex = i;
-let o = data.events[currentEvent].orders[i];
+    editIndex = i;
+    let o = data.events[currentEvent].orders[i];
 
-document.getElementById("clientName").value = o.name;
-document.getElementById("paidSwitch").checked = o.paid;
+    document.getElementById("clientName").value = o.name;
+    document.getElementById("paidSwitch").checked = o.paid;
 
-if(o.sizes){
-Object.entries(o.sizes).forEach(([k,v])=>{
-document.getElementById("size_"+k).value = v;
-});
+    if(o.sizes){
+        Object.entries(o.sizes).forEach(([k,v])=>{
+            document.getElementById("size_"+k).value = v;
+        });
+    }
+
+    if(o.qty){
+        document.getElementById("quantity").value = o.qty;
+    }
+
+    window.scrollTo({top:0,behavior:"smooth"});
 }
 
-if(o.qty){
-document.getElementById("quantity").value = o.qty;
-}
-
-window.scrollTo({top:0,behavior:'smooth'});
-}
-
-/* ---------- TOGGLE PAGATO ---------- */
+/* ===== TOGGLE PAGATO ===== */
 
 function togglePaid(i){
-data.events[currentEvent].orders[i].paid =
-!data.events[currentEvent].orders[i].paid;
-save();
-renderEvent();
+    data.events[currentEvent].orders[i].paid =
+        !data.events[currentEvent].orders[i].paid;
+    save();
+    renderEvent();
 }
 
-/* ---------- ELIMINA ORDINE ---------- */
+/* ===== ELIMINA ORDINE ===== */
 
 function deleteOrder(i){
-if(confirm("Eliminare ordine?")){
-data.events[currentEvent].orders.splice(i,1);
-save();
-renderEvent();
-}
+    if(confirm("Eliminare ordine?")){
+        data.events[currentEvent].orders.splice(i,1);
+        save();
+        renderEvent();
+    }
 }
 
-/* ---------- ANNULLA MODIFICA ---------- */
+/* ===== ANNULLA MODIFICA ===== */
 
 function cancelEdit(){
-editIndex = null;
-renderEvent();
+    editIndex = null;
+    renderEvent();
 }
 
-/* ---------- DARK MODE ---------- */
-
-function toggleDark(){
-data.settings.dark = !data.settings.dark;
-save();
-renderHome();
-}
-/* ---------- RIEPILOGO ALFABETICO ---------- */
-
-function renderSummary(){
-
-let ev = data.events[currentEvent];
-
-if(!ev || ev.orders.length === 0) return "";
-
-let sorted = [...ev.orders]
-.sort((a,b)=>a.name.localeCompare(b.name));
-
-let totalIncasso = 0;
-let totalPagato = 0;
-
-sorted.forEach(o=>{
-totalIncasso += o.total;
-if(o.paid) totalPagato += o.total;
-});
-
-return `
-<div class="card">
-<h2>Riepilogo Ordini</h2>
-
-${sorted.map(o=>`
-<div style="margin-bottom:10px">
-<b>${o.name}</b><br>
-${ev.type==="Abbigliamento" ?
-Object.entries(o.sizes)
-.map(([k,v])=>`${v} ${k}`)
-.join(" - ")
-:
-o.qty+" pezzi"
-}
- — € ${o.total} — 
-<span class="${o.paid?'statusPaid':'statusUnpaid'}">
-${o.paid?'PAGATO':'NON PAGATO'}
-</span>
-</div>
-`).join("")}
-
-<hr>
-
-<div><b>Totale Evento:</b> € ${totalIncasso}</div>
-<div><b>Totale Pagato:</b> € ${totalPagato}</div>
-<div><b>Da Incassare:</b> € ${totalIncasso-totalPagato}</div>
-
-<button onclick="window.print()">Stampa</button>
-
-</div>
-`;
-
-}
-
-/* ---------- BACKUP ---------- */
-
-function exportBackup(){
-let blob = new Blob([JSON.stringify(data)],{type:"application/json"});
-let a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = "giorders_backup.json";
-a.click();
-}
-
-function importBackup(e){
-let reader = new FileReader();
-reader.onload = function(){
-data = JSON.parse(reader.result);
-save();
-renderHome();
-};
-reader.readAsText(e.target.files[0]);
-}
-
-/* ---------- INTEGRA RIEPILOGO IN EVENTO ---------- */
-
-function renderEvent(){
-
-let ev = data.events[currentEvent];
-
-document.getElementById("app").innerHTML = `
-
-<div class="card">
-<h2>${ev.name} - €${ev.price}</h2>
-
-<input id="clientName" placeholder="Nome">
-
-${ev.type === "Abbigliamento" ? renderSizes() : `
-<input id="quantity" type="number" placeholder="Quantità">
-`}
-
-<div style="display:flex;justify-content:center;margin:10px 0">
-<label class="switch">
-<input type="checkbox" id="paidSwitch">
-<span class="slider"></span>
-</label>
-</div>
-
-<div style="display:flex;gap:10px">
-<button class="primary" style="flex:1" onclick="saveOrder()">Salva</button>
-<button class="gray" onclick="cancelEdit()">Annulla</button>
-<button class="gray" onclick="renderHome()">Indietro</button>
-</div>
-
-</div>
-
-<div class="card">
-<h2>Ordini</h2>
-${renderOrders()}
-</div>
-
-${renderSummary()}
-
-`;
-
-}
-
-/* ---------- AVVIO APP ---------- */
-
-if(data.settings.dark){
-document.body.classList.add("dark");
-}
+/* ===== AVVIO ===== */
 
 renderPin();
 
