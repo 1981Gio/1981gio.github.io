@@ -468,14 +468,15 @@ function renderOrders(){
 }
 
 /* ===== MODIFICA ===== */
+/* ===== MODIFICA ORDINE ===== */
 function editOrder(i){
 
     editIndex = i;
 
-    // 🔥 rifai il render per attivare evidenziazione
+    // 🔁 Ricarica la pagina evento per applicare classe editing
     renderEvent();
 
-    // ⬇ aspetta che il DOM sia pronto
+    // ⏳ Aspetta che il DOM venga ricreato
     setTimeout(()=>{
 
         let ev = data.events[currentEvent];
@@ -507,7 +508,7 @@ function editOrder(i){
             if(q) q.value = o.qty;
         }
 
-        // 🔥 scroll sempre in alto
+        // 🔥 Scroll sempre in alto
         window.scrollTo({top:0,behavior:"smooth"});
 
     }, 50);
