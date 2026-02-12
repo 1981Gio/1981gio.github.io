@@ -463,28 +463,39 @@ function renderOrders(){
 }
 
 /* ===== MODIFICA ===== */
-
 function editOrder(i){
 
-    editIndex=i;
-    let ev=data.events[currentEvent];
-    let o=ev.orders[i];
+    editIndex = i;
+    let ev = data.events[currentEvent];
+    let o = ev.orders[i];
 
-    document.getElementById("clientName").value=o.name;
+    // Nome
+    document.getElementById("clientName").value = o.name;
 
+    // Switch pagato
+    document.getElementById("paidSwitch").checked = o.paid;
+
+    // Reset taglie
+    ["XS","S","M","L","XL","XXL","XXXL"].forEach(s=>{
+        let el = document.getElementById("size_"+s);
+        if(el) el.value = 0;
+    });
+
+    // Valorizza taglie
     if(o.sizes){
-        ["XS","S","M","L","XL","XXL","XXXL"].forEach(s=>{
-            let el=document.getElementById("size_"+s);
-            if(el) el.value=o.sizes[s]||0;
+        Object.entries(o.sizes).forEach(([k,v])=>{
+            let el = document.getElementById("size_"+k);
+            if(el) el.value = v;
         });
     }
 
+    // Quantità semplice
     if(o.qty){
-        let q=document.getElementById("quantity");
-        if(q) q.value=o.qty;
+        let q = document.getElementById("quantity");
+        if(q) q.value = o.qty;
     }
 
-    renderEvent();
+    window.scrollTo({top:0,behavior:"smooth"});
 }
 
 /* ===== CANCELLA ORDINE ===== */
