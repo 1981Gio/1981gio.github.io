@@ -428,12 +428,11 @@ function saveOrder(){
 function renderOrders(){
 
     let ev = data.events[currentEvent];
-    if(ev.orders.length===0) return "<p>Nessun ordine</p>";
+    if(ev.orders.length === 0) return "<p>Nessun ordine</p>";
 
     return ev.orders.map((o,i)=>`
-        <div class="order-box ${editIndex===i?'editing':''}">
+        <div class="order-box ${editIndex===i ? 'editing' : ''}">
 
-            <!-- CLICK SUL NOME PER MODIFICA -->
             <div class="order-name"
                  onclick="editOrder(${i})"
                  style="cursor:pointer;">
@@ -453,8 +452,8 @@ function renderOrders(){
 
                 <div style="text-align:right;">
                     <div><b>€ ${o.total}</b></div>
-                    <div class="${o.paid?'badge-paid':'badge-unpaid'}">
-                        ${o.paid?'PAGATO':'NON PAGATO'}
+                    <div class="${o.paid ? 'badge-paid' : 'badge-unpaid'}">
+                        ${o.paid ? 'PAGATO' : 'NON PAGATO'}
                     </div>
                 </div>
             </div>
