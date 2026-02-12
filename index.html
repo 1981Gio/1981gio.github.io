@@ -3,15 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GiOrders Pro v4</title>
-
+<title>GiOrders Pro v4.1</title>
 <meta name="theme-color" content="#0a84ff">
 
 <style>
-
-/* =============================
-   BASE APP STYLE iOS
-============================= */
 
 body{
     margin:0;
@@ -37,21 +32,10 @@ body{
     padding:20px;
     margin-bottom:20px;
     box-shadow:0 10px 30px rgba(0,0,0,0.05);
-    transition:0.3s;
 }
 
 .dark .card{
     background:#1c1c1e;
-}
-
-h1{
-    font-size:24px;
-    margin:0 0 15px 0;
-}
-
-h2{
-    font-size:18px;
-    margin-bottom:15px;
 }
 
 input, select{
@@ -59,15 +43,7 @@ input, select{
     padding:12px;
     border-radius:14px;
     border:1px solid #ddd;
-    font-size:15px;
     margin-bottom:12px;
-}
-
-.dark input,
-.dark select{
-    background:#2c2c2e;
-    color:white;
-    border:1px solid #444;
 }
 
 button{
@@ -75,42 +51,17 @@ button{
     border-radius:14px;
     padding:10px 16px;
     font-weight:600;
-    font-size:14px;
     cursor:pointer;
-    transition:0.2s;
 }
 
-button:active{
-    transform:scale(0.97);
-}
+.primary{background:#0a84ff;color:white;}
+.secondary{background:#e5e5ea;}
+.dark .secondary{background:#2c2c2e;color:white;}
+.danger{background:#ff3b30;color:white;}
 
-.primary{
-    background:#0a84ff;
-    color:white;
-}
+.hidden{display:none;}
 
-.secondary{
-    background:#e5e5ea;
-}
-
-.dark .secondary{
-    background:#2c2c2e;
-    color:white;
-}
-
-.danger{
-    background:#ff3b30;
-    color:white;
-}
-
-.hidden{
-    display:none;
-}
-
-/* =============================
-   PIN SCREEN ELEGANTE
-============================= */
-
+/* PIN */
 #pinScreen{
     position:fixed;
     inset:0;
@@ -126,7 +77,6 @@ button:active{
     font-size:34px;
     letter-spacing:14px;
     margin:25px 0;
-    font-weight:600;
 }
 
 .keypad{
@@ -142,17 +92,9 @@ button:active{
     background:rgba(255,255,255,0.18);
     color:white;
     font-size:20px;
-    backdrop-filter:blur(10px);
 }
 
-.keypad button:active{
-    background:rgba(255,255,255,0.35);
-}
-
-/* =============================
-   SWITCH STILE IMPOSTAZIONI iOS
-============================= */
-
+/* Switch iOS */
 .switch{
     position:relative;
     display:inline-block;
@@ -160,9 +102,7 @@ button:active{
     height:30px;
 }
 
-.switch input{
-    display:none;
-}
+.switch input{display:none;}
 
 .slider{
     position:absolute;
@@ -181,7 +121,6 @@ button:active{
     top:2px;
     background:white;
     border-radius:50%;
-    box-shadow:0 2px 6px rgba(0,0,0,0.2);
     transition:.3s;
 }
 
@@ -202,9 +141,30 @@ button:active{
 
 .size-row select{
     width:70px;
-    text-align:center;
-    padding:8px;
+}
+
+.order-box{
+    padding:12px 0;
+    border-bottom:1px solid #eee;
+}
+
+.order-box.editing{
+    background:#e8f0ff;
+    border-radius:14px;
+    padding:12px;
+}
+
+.progress-bar{
+    height:14px;
+    background:#e5e5ea;
     border-radius:12px;
+    overflow:hidden;
+    margin-top:10px;
+}
+
+.progress-fill{
+    height:100%;
+    background:#34c759;
 }
 
 </style>
@@ -237,7 +197,7 @@ button:active{
    CORE DATA
 ============================= */
 
-let data = JSON.parse(localStorage.getItem("giorders_pro_v4")) || {
+let data = JSON.parse(localStorage.getItem("giorders_pro_v41")) || {
     settings:{
         pin:"1926",
         dark:false
@@ -254,7 +214,7 @@ let tempPin = "";
 ============================= */
 
 function save(){
-    localStorage.setItem("giorders_pro_v4", JSON.stringify(data));
+    localStorage.setItem("giorders_pro_v41", JSON.stringify(data));
 }
 
 /* =============================
@@ -357,7 +317,7 @@ function renderHome(){
                         </div>
 
                         <div style="margin-top:10px;display:flex;gap:8px;">
-                            <button class="gray" onclick="openEvent(${i})">Apri</button>
+                            <button class="secondary" onclick="openEvent(${i})">Apri</button>
                             <button class="danger" onclick="deleteEvent(${i})">Elimina</button>
                         </div>
                     </div>
@@ -369,9 +329,9 @@ function renderHome(){
             <h2>Impostazioni</h2>
 
             <div style="display:grid;gap:10px;">
-                <button class="gray" onclick="toggleDark()">🌙 Modalità Giorno/Notte</button>
-                <button class="gray" onclick="changePin()">🔐 Cambia PIN</button>
-                <button class="gray" onclick="exportBackup()">💾 Backup</button>
+                <button class="secondary" onclick="toggleDark()">🌙 Modalità Giorno/Notte</button>
+                <button class="secondary" onclick="changePin()">🔐 Cambia PIN</button>
+                <button class="secondary" onclick="exportBackup()">💾 Backup</button>
                 <input type="file" onchange="importBackup(event)">
             </div>
         </div>
@@ -500,6 +460,22 @@ function renderEvent(){
 
     window.scrollTo({top:0,behavior:"smooth"});
 }
+
+/* =============================
+   TAGLIE
+============================= */
+
+function renderSizes(){
+    let sizes=["XS","S","M","L","XL","XXL","XXXL"];
+    return sizes.map(s=>`
+        <div class="size-row">
+            <div>${s}</div>
+            <select id="size_${s}">
+                ${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option value="${n}">${n}</option>`).join("")}
+            </select>
+        </div>
+    `).join("");
+}
 /* =============================
    SALVA / AGGIORNA ORDINE
 ============================= */
@@ -514,7 +490,10 @@ function saveOrder(){
         return;
     }
 
-    let order = { name };
+    let order = {
+        name,
+        paid: document.getElementById("paidSwitch").checked
+    };
 
     if(ev.type === "Abbigliamento"){
 
@@ -607,7 +586,16 @@ function renderOrders(){
                         : o.qty+" pezzi"
                     }
                 </div>
-                <div><b>€ ${o.total}</b></div>
+                <div style="text-align:right;">
+                    <div><b>€ ${o.total}</b></div>
+                    <div style="
+                        font-size:13px;
+                        font-weight:600;
+                        color:${o.paid ? '#34c759' : '#ff3b30'};
+                    ">
+                        ${o.paid ? 'PAGATO' : 'NON PAGATO'}
+                    </div>
+                </div>
             </div>
 
             <div style="margin-top:8px;display:flex;gap:8px;">
@@ -639,6 +627,7 @@ function editOrder(i){
         let o = data.events[currentEvent].orders[i];
 
         document.getElementById("clientName").value = o.name;
+        document.getElementById("paidSwitch").checked = o.paid;
 
         if(o.sizes){
             Object.entries(o.sizes).forEach(([k,v])=>{
@@ -679,9 +668,14 @@ function renderStatistics(){
 
     let totale = 0;
     let pezzi = 0;
+    let incassato = 0;
 
     ev.orders.forEach(o=>{
         totale += o.total;
+
+        if(o.paid){
+            incassato += o.total;
+        }
 
         if(o.sizes){
             pezzi += Object.values(o.sizes)
@@ -698,6 +692,8 @@ function renderStatistics(){
             <h2>Riepilogo Evento</h2>
             <div>Totale pezzi: <b>${pezzi}</b></div>
             <div>Incasso totale: <b>€ ${totale}</b></div>
+            <div>Incassato: <b style="color:#34c759;">€ ${incassato}</b></div>
+            <div>Da incassare: <b style="color:#ff3b30;">€ ${totale - incassato}</b></div>
         </div>
     `;
 }
@@ -753,7 +749,7 @@ function renderBusBar(){
         .reduce((a,b)=>a+(b.qty||0),0);
 
     let percent = ev.seats
-        ? (booked/ev.seats)*100
+        ? Math.min((booked/ev.seats)*100,100)
         : 0;
 
     return `
