@@ -108,6 +108,7 @@ border-radius:14px;
 
 <script>
 
+// --- Dati iniziali ---
 let data = JSON.parse(localStorage.getItem("gioData") || JSON.stringify({
 settings:{pin:"1926",dark:false},
 events:[]
@@ -117,6 +118,7 @@ let currentEvent=null;
 let editIndex=null;
 let pinInput="";
 
+// --- PIN Screen ---
 function save(){localStorage.setItem("gioData",JSON.stringify(data));}
 
 function press(n){
@@ -124,6 +126,7 @@ if(pinInput.length<4){pinInput+=n;updatePin();}
 }
 function clearPin(){pinInput="";updatePin();}
 function updatePin(){document.getElementById("pinDisplay").innerText=pinInput.padEnd(4,"-");}
+
 function checkPin(){
 if(pinInput===data.settings.pin){
 document.getElementById("pinScreen").classList.add("hidden");
@@ -132,6 +135,7 @@ renderHome();
 }else alert("PIN errato");
 }
 
+// --- HOME ---
 function renderHome(){
 document.getElementById("app").innerHTML=`
 <div class="header">Eventi</div>
@@ -170,6 +174,7 @@ if(data.settings.dark)document.body.classList.add("dark");
 else document.body.classList.remove("dark");
 }
 
+// --- Aggiungi Evento ---
 function addEvent(){
 let name=document.getElementById("evName").value;
 if(!name)return;
@@ -183,6 +188,7 @@ orders:[]
 save();renderHome();
 }
 
+// --- Elimina Evento ---
 function delEvent(i){
 if(confirm("Eliminare evento?")){
 data.events.splice(i,1);
@@ -190,6 +196,7 @@ save();renderHome();
 }
 }
 
+// --- Apri Evento ---
 function openEvent(i){
 currentEvent=i;
 let ev=data.events[i];
@@ -234,6 +241,7 @@ renderQuantArea();
 renderOrders();
 }
 
+// --- Quantità/Taglie ---
 function renderQuantArea(){
 let ev=data.events[currentEvent];
 let html="";
@@ -253,6 +261,7 @@ ${[...Array(51).keys()].map(n=>`<option>${n}</option>`).join("")}
 document.getElementById("quantArea").innerHTML=html;
 }
 
+// --- Salva Ordine ---
 function saveOrder(){
 let ev=data.events[currentEvent];
 let name=document.getElementById("custName").value;
@@ -287,8 +296,7 @@ method:document.getElementById("payMethod").value
 if(editIndex!=null){ev.orders[editIndex]=order;editIndex=null;}
 else ev.orders.push(order);
 
-save();
-renderOrders();
+save();renderOrders();
 document.getElementById("custName").value="";
 document.getElementById("custPhone").value="";
 document.getElementById("custNote").value="";
@@ -296,6 +304,7 @@ document.getElementById("paid").checked=false;
 renderQuantArea();
 }
 
+// --- Render Ordini ---
 function renderOrders(){
 let ev=data.events[currentEvent];
 let container=document.getElementById("orders");
@@ -321,6 +330,7 @@ container.innerHTML+=`
 renderSummary();
 }
 
+// --- Riepilogo ---
 function renderSummary(){
 let ev=data.events[currentEvent];
 let totalPaid=ev.orders.filter(o=>o.paid).reduce((a,b)=>a+b.total,0);
@@ -335,6 +345,7 @@ Totale ordini: ${ev.orders.length}
 `;
 }
 
+// --- Modifica Ordine ---
 function editOrder(i){
 editIndex=i;
 let o=data.events[currentEvent].orders[i];
@@ -351,6 +362,7 @@ if(el)el.value=o.sizes[s];
 window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// --- Elimina Ordine ---
 function deleteOrder(i){
 if(confirm("Eliminare ordine?")){
 data.events[currentEvent].orders.splice(i,1);
@@ -358,20 +370,18 @@ save();renderOrders();
 }
 }
 
-function toggleDark(){
-data.settings.dark=!data.settings.dark;
-save();renderHome();
-}
+// --- Toggle tema ---
+function toggleDark(){data.settings.dark=!data.settings.dark;save();renderHome();}
 
+// --- Cambia PIN ---
 function changePin(){
 let newPin=prompt("Nuovo PIN (4 cifre)");
-if(newPin && newPin.length===4){
-data.settings.pin=newPin;
-save();
-alert("PIN aggiornato");
+if(newPin && /^\d{4}$/.test(newPin)){
+data.settings.pin=newPin;save();alert("PIN aggiornato");
 }
 }
 
+// --- Backup / Import ---
 function exportData(){
 let blob=new Blob([JSON.stringify(data)],{type:"application/json"});
 let a=document.createElement("a");
@@ -382,12 +392,13 @@ a.click();
 
 function importData(e){
 let reader=new FileReader();
-reader.onload=function(){
-data=JSON.parse(reader.result);
-save();
-renderHome();
-};
+reader.onload=function(){data=JSON.parse(reader.result);save();renderHome();};
 reader.readAsText(e.target.files[0]);
+}
+
+// --- PWA Service Worker Register ---
+if('serviceWorker' in navigator){
+navigator.serviceWorker.register('sw.js');
 }
 
 </script>
