@@ -1,15 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GiOrders Pro</title>
 
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#007aff">
+
 <style>
+
 body{
     margin:0;
-    font-family:-apple-system,BlinkMacSystemFont;
+    font-family:-apple-system,BlinkMacSystemFont,sans-serif;
     background:#f2f2f7;
+    color:#111;
 }
 
 .dark{
@@ -19,24 +24,28 @@ body{
 
 .card{
     background:white;
-    margin:20px;
+    margin:15px;
     padding:20px;
     border-radius:18px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.08);
+    box-shadow:0 6px 20px rgba(0,0,0,0.05);
 }
 
 .dark .card{
     background:#1c1c1e;
 }
 
-h2{text-align:center;}
+h2{
+    margin-top:0;
+    text-align:center;
+}
 
 input,select{
     width:100%;
-    padding:12px;
+    padding:10px;
     border-radius:12px;
     border:1px solid #ddd;
-    margin-bottom:12px;
+    margin-bottom:10px;
+    font-size:15px;
 }
 
 button{
@@ -44,25 +53,66 @@ button{
     border:none;
     border-radius:12px;
     font-weight:600;
-    cursor:pointer;
+    font-size:14px;
 }
 
 .primary{background:#007aff;color:white;}
 .gray{background:#d1d1d6;}
 .danger{background:#ff3b30;color:white;}
 
-.hidden{display:none}
+.hidden{display:none;}
+
+/* ===== PIN SCREEN ===== */
+
+#pinScreen{
+    position:fixed;
+    inset:0;
+    background:#007aff;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    color:white;
+}
+
+.pin-dots{
+    font-size:28px;
+    letter-spacing:10px;
+    margin:20px 0;
+}
+
+.keypad{
+    display:grid;
+    grid-template-columns:repeat(3,80px);
+    gap:15px;
+}
+
+.keypad button{
+    padding:20px;
+    font-size:20px;
+    border-radius:18px;
+    background:#005edb;
+    color:white;
+}
+
+/* ===== SWITCH iOS ===== */
 
 .paid-container{
     display:flex;
     justify-content:center;
     align-items:center;
-    gap:12px;
+    gap:15px;
     margin:15px 0;
+    font-weight:600;
+    font-size:13px;
 }
+
+.paid-label.left{color:#ff3b30;}
+.paid-label.right{color:#34c759;}
 
 .switch{
     position:relative;
+    display:inline-block;
     width:50px;
     height:28px;
 }
@@ -78,12 +128,10 @@ button{
 }
 
 .slider:before{
-    content:"";
     position:absolute;
-    height:22px;
-    width:22px;
-    left:3px;
-    top:3px;
+    content:"";
+    height:22px;width:22px;
+    left:3px;top:3px;
     background:white;
     border-radius:50%;
     transition:.3s;
@@ -97,305 +145,536 @@ input:checked + .slider:before{
     transform:translateX(22px);
 }
 
+/* ===== ORDINI ===== */
+
 .order-box{
-    border-bottom:1px solid #eee;
     padding:10px 0;
+    border-bottom:1px solid #eee;
 }
 
-.badge-paid{color:#34c759;font-weight:bold;}
-.badge-unpaid{color:#ff3b30;font-weight:bold;}
+.order-name{
+    font-weight:700;
+    font-size:16px;
+}
 
-.pinScreen{
+.order-row{
     display:flex;
-    flex-direction:column;
+    justify-content:space-between;
     align-items:center;
-    justify-content:center;
-    height:100vh;
+    font-size:14px;
 }
 
-.pinDisplay{
-    font-size:30px;
-    letter-spacing:10px;
-    margin-bottom:20px;
+.badge-paid{color:#34c759;font-weight:700;}
+.badge-unpaid{color:#ff3b30;font-weight:700;}
+
+.size-row{
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:8px;
 }
 
-.keypad{
-    display:grid;
-    grid-template-columns:repeat(3,70px);
-    gap:15px;
+.size-row select{
+    width:80px;
 }
 
-.keypad button{
-    padding:18px;
-    border-radius:50%;
+.progress-bar{
+    height:10px;
+    background:#eee;
+    border-radius:10px;
+    overflow:hidden;
+    margin-top:5px;
 }
+
+.progress-fill{
+    height:100%;
+    background:#34c759;
+}
+
+@media print{
+    button{display:none;}
+}
+
 </style>
 </head>
+
 <body>
 
-<div id="pinScreen" class="pinScreen"></div>
+<div id="pinScreen">
+    <h2>GiOrders Pro</h2>
+    <div id="pinDots" class="pin-dots">○ ○ ○ ○</div>
+
+    <div class="keypad">
+        <button onclick="pressPin(1)">1</button>
+        <button onclick="pressPin(2)">2</button>
+        <button onclick="pressPin(3)">3</button>
+        <button onclick="pressPin(4)">4</button>
+        <button onclick="pressPin(5)">5</button>
+        <button onclick="pressPin(6)">6</button>
+        <button onclick="pressPin(7)">7</button>
+        <button onclick="pressPin(8)">8</button>
+        <button onclick="pressPin(9)">9</button>
+        <button onclick="clearPin()">C</button>
+        <button onclick="pressPin(0)">0</button>
+        <button onclick="checkPin()">OK</button>
+    </div>
+</div>
+
 <div id="app" class="hidden"></div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("giorders")) || {
-    settings:{ pin:"1926", dark:false },
+/* ===== DATI ===== */
+
+let data = JSON.parse(localStorage.getItem("giorders_pro_v2")) || {
+    settings:{
+        pin:"1926",
+        dark:false
+    },
     events:[]
 };
 
 let currentEvent = null;
-let tempPin = "";
 let editIndex = null;
+let tempPin = "";
 
-function saveData(){
-    localStorage.setItem("giorders", JSON.stringify(data));
+/* ===== SALVA ===== */
+
+function save(){
+    localStorage.setItem("giorders_pro_v2", JSON.stringify(data));
 }
 
-function renderPin(){
-    document.getElementById("pinScreen").innerHTML = `
-        <h2>Inserisci PIN</h2>
-        <div class="pinDisplay">${tempPin.replace(/./g,"•")}</div>
-        <div class="keypad">
-            ${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="pressPin(${n})">${n}</button>`).join("")}
-            <button onclick="clearPin()">C</button>
-            <button onclick="pressPin(0)">0</button>
-            <button onclick="checkPin()">OK</button>
-        </div>
-    `;
+/* ===== PIN ===== */
+
+function updateDots(){
+    let dots = "";
+    for(let i=0;i<4;i++){
+        dots += i < tempPin.length ? "● " : "○ ";
+    }
+    document.getElementById("pinDots").innerText = dots.trim();
 }
 
 function pressPin(n){
-    if(tempPin.length<4){
-        tempPin+=n;
-        renderPin();
+    if(tempPin.length < 4){
+        tempPin += n;
+        updateDots();
     }
 }
 
 function clearPin(){
-    tempPin="";
-    renderPin();
+    tempPin = "";
+    updateDots();
 }
 
 function checkPin(){
-    if(tempPin===data.settings.pin){
-        document.getElementById("pinScreen").classList.add("hidden");
+    if(tempPin === data.settings.pin){
+        document.getElementById("pinScreen").style.display = "none";
         document.getElementById("app").classList.remove("hidden");
         renderHome();
     }else{
-        alert("PIN errato");
+        document.getElementById("pinDots").style.transform="translateX(10px)";
+        setTimeout(()=>document.getElementById("pinDots").style.transform="translateX(-10px)",100);
+        setTimeout(()=>document.getElementById("pinDots").style.transform="translateX(0px)",200);
         clearPin();
     }
 }
 
-function renderHome(){
-    document.getElementById("app").innerHTML = `
-    <div class="card">
-        <h2>Nuovo Evento</h2>
-        <input id="evName" placeholder="Nome evento">
-        <select id="evType">
-            <option value="Abbigliamento">Abbigliamento</option>
-            <option value="Gadget">Gadget</option>
-            <option value="Bus">Bus</option>
-        </select>
-        <input id="evPrice" type="number" placeholder="Prezzo €">
-        <input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)">
-        <button class="primary" onclick="createEvent()">Crea Evento</button>
-        <button class="gray" onclick="toggleDark()">🌙 Modalità</button>
-        <button class="gray" onclick="changePin()">🔐 Cambia PIN</button>
-    </div>
+/* ===== HOME ===== */
 
-    <div class="card">
-        <h2>Eventi</h2>
-        ${renderEventList()}
-    </div>
+function renderHome(){
+
+    document.body.classList.toggle("dark", data.settings.dark);
+
+    document.getElementById("app").innerHTML = `
+        <div class="card">
+            <h2>Nuovo Evento</h2>
+            <input id="evName" placeholder="Nome evento">
+            <select id="evType">
+                <option value="Abbigliamento">Abbigliamento</option>
+                <option value="Gadget">Gadget</option>
+                <option value="Bus">Bus</option>
+            </select>
+            <input id="evPrice" type="number" placeholder="Prezzo €">
+            <input id="evSeats" type="number" placeholder="Posti Bus (solo Bus)">
+            <button class="primary" onclick="addEvent()">Crea Evento</button>
+            <button class="gray" onclick="toggleDark()">🌙 Modalità Scura</button>
+            <button class="gray" onclick="changePin()">🔐 Cambia PIN</button>
+            <button class="gray" onclick="exportBackup()">💾 Backup</button>
+            <input type="file" onchange="importBackup(event)">
+        </div>
+
+        <div class="card">
+            <h2>Eventi</h2>
+            ${
+                data.events.length===0
+                ? "<p>Nessun evento creato</p>"
+                : data.events.map((e,i)=>`
+                    <div class="order-box">
+                        <div class="order-row">
+                            <div><b>${e.name}</b></div>
+                            <div>${e.type}</div>
+                        </div>
+                        <div style="margin-top:8px;">
+                            <button class="primary" onclick="openEvent(${i})">Apri</button>
+                            <button class="danger" onclick="deleteEvent(${i})">Elimina</button>
+                        </div>
+                    </div>
+                `).join("")
+            }
+        </div>
     `;
 }
 
-function createEvent(){
-    let name=document.getElementById("evName").value;
-    let type=document.getElementById("evType").value;
-    let price=parseFloat(document.getElementById("evPrice").value)||0;
-    let seats=parseInt(document.getElementById("evSeats").value)||0;
+function addEvent(){
+    let name = document.getElementById("evName").value.trim();
+    let type = document.getElementById("evType").value;
+    let price = parseFloat(document.getElementById("evPrice").value) || 0;
+    let seats = parseInt(document.getElementById("evSeats").value) || 0;
 
-    if(!name) return alert("Inserisci nome evento");
+    if(!name) return;
 
-    data.events.push({ name,type,price,seats,orders:[] });
-    saveData();
+    data.events.push({
+        name,
+        type,
+        price,
+        seats,
+        orders:[]
+    });
+
+    save();
     renderHome();
-}
-
-function renderEventList(){
-    if(data.events.length===0) return "Nessun evento";
-
-    return data.events.map((ev,i)=>`
-        <div class="order-box">
-            <strong>${ev.name}</strong> (${ev.type})
-            <div style="margin-top:8px">
-                <button class="primary" onclick="openEvent(${i})">Apri</button>
-                <button class="danger" onclick="deleteEvent(${i})">Elimina</button>
-            </div>
-        </div>
-    `).join("");
-}
-
-function openEvent(i){
-    currentEvent=i;
-    editIndex=null;
-    renderEvent();
 }
 
 function deleteEvent(i){
     if(confirm("Eliminare evento?")){
         data.events.splice(i,1);
-        saveData();
+        save();
         renderHome();
     }
 }
 
+function openEvent(i){
+    currentEvent = i;
+    editIndex = null;
+    renderEvent();
+}
+
 function toggleDark(){
-    document.body.classList.toggle("dark");
-    data.settings.dark=!data.settings.dark;
-    saveData();
+    data.settings.dark = !data.settings.dark;
+    save();
+    renderHome();
 }
 
 function changePin(){
-    let newPin=prompt("Nuovo PIN 4 cifre");
+    let newPin = prompt("Nuovo PIN a 4 cifre:");
     if(newPin && newPin.length===4){
-        data.settings.pin=newPin;
-        saveData();
+        data.settings.pin = newPin;
+        save();
         alert("PIN aggiornato");
     }
 }
+
+/* ===== BACKUP ===== */
+
+function exportBackup(){
+    let blob = new Blob([JSON.stringify(data)],{type:"application/json"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "giorders_backup.json";
+    a.click();
+}
+
+function importBackup(e){
+    let reader = new FileReader();
+    reader.onload = function(){
+        data = JSON.parse(reader.result);
+        save();
+        renderHome();
+    };
+    reader.readAsText(e.target.files[0]);
+}
+/* ===== PAGINA EVENTO ===== */
+
 function renderEvent(){
-    let ev=data.events[currentEvent];
 
-    document.getElementById("app").innerHTML=`
-    <div class="card">
-        <h2>${ev.name} - €${ev.price}</h2>
+    let ev = data.events[currentEvent];
 
-        <input id="clientName" placeholder="Nome">
+    document.getElementById("app").innerHTML = `
+        <div class="card">
+            <h2>${ev.name} - €${ev.price}</h2>
 
-        ${ev.type==="Abbigliamento"?renderSizes():`<input id="quantity" type="number" placeholder="Quantità">`}
+            <input id="clientName" placeholder="Nome">
 
-        <div class="paid-container">
-            <span style="color:#ff3b30">NON PAGATO</span>
-            <label class="switch">
-                <input type="checkbox" id="paidSwitch">
-                <span class="slider"></span>
-            </label>
-            <span style="color:#34c759">PAGATO</span>
+            ${ev.type === "Abbigliamento" ? renderSizes() : `
+                <input id="quantity" type="number" placeholder="Quantità">
+            `}
+
+            <div class="paid-container">
+                <span class="paid-label left">NON PAGATO</span>
+                <label class="switch">
+                    <input type="checkbox" id="paidSwitch">
+                    <span class="slider"></span>
+                </label>
+                <span class="paid-label right">PAGATO</span>
+            </div>
+
+            <button class="primary" onclick="saveOrder()">Salva</button>
+            <button class="gray" onclick="cancelEdit()">Annulla</button>
+            <button class="gray" onclick="renderHome()">Indietro</button>
         </div>
 
-        <button class="primary" onclick="saveOrder()">Salva</button>
-        <button class="gray" onclick="renderHome()">Indietro</button>
-    </div>
+        <div class="card">
+            <h2>Ordini</h2>
+            ${renderOrders()}
+        </div>
 
-    <div class="card">
-        <h2>Ordini</h2>
-        ${renderOrders()}
-    </div>
-
-    <div class="card">
-        <h2>Emissione Ordine</h2>
-        ${renderEmission()}
-    </div>
+        ${renderStatistics()}
+        ${ev.type==="Abbigliamento" ? renderEmissione() : ""}
+        ${ev.type==="Bus" ? renderBusBar() : ""}
     `;
 }
 
+/* ===== TAGLIE ===== */
+
 function renderSizes(){
-    const sizes=["XS","S","M","L","XL","XXL","XXXL"];
+    let sizes=["XS","S","M","L","XL","XXL","XXXL"];
     return sizes.map(s=>`
-        <div style="display:flex;justify-content:space-between;margin:6px 0">
-            <span>${s}</span>
-            <select id="size_${s}" style="width:70px">
-                ${Array.from({length:21},(_,i)=>`<option value="${i}">${i}</option>`).join("")}
+        <div class="size-row">
+            <div>${s}</div>
+            <select id="size_${s}">
+                ${[0,1,2,3,4,5,6,7,8,9,10].map(n=>`<option>${n}</option>`).join("")}
             </select>
         </div>
     `).join("");
 }
 
+/* ===== SALVA ORDINE ===== */
+
 function saveOrder(){
+
     let ev=data.events[currentEvent];
-    let name=document.getElementById("clientName").value;
-    let paid=document.getElementById("paidSwitch").checked;
+    let name=document.getElementById("clientName").value.trim();
+    if(!name) return;
 
-    if(!name) return alert("Inserisci nome");
-
-    let order={ name, paid, items:{} };
+    let order={name,paid:document.getElementById("paidSwitch").checked};
 
     if(ev.type==="Abbigliamento"){
-        ["XS","S","M","L","XL","XXL","XXXL"].forEach(s=>{
-            let q=parseInt(document.getElementById("size_"+s).value)||0;
-            if(q>0) order.items[s]=q;
+        order.sizes={};
+        let totalQty=0;
+
+        ["XS","S","M","L","XL","XXL"].forEach(s=>{
+            let q=parseInt(document.getElementById("size_"+s).value);
+            if(q>0){
+                order.sizes[s]=q;
+                totalQty+=q;
+            }
         });
+
+        if(totalQty===0) return;
+        order.total=totalQty*ev.price;
+
     }else{
+
         let q=parseInt(document.getElementById("quantity").value)||0;
-        if(q>0) order.items["Q"]=q;
+        if(q===0) return;
+
+        if(ev.type==="Bus"){
+            let booked=ev.orders.reduce((a,b)=>a+(b.qty||0),0);
+            if(booked+q>ev.seats){
+                alert("Posti insufficienti");
+                return;
+            }
+        }
+
+        order.qty=q;
+        order.total=q*ev.price;
     }
 
-    ev.orders.push(order);
-    saveData();
+    if(editIndex!==null){
+        ev.orders[editIndex]=order;
+        editIndex=null;
+    }else{
+        ev.orders.push(order);
+    }
+
+    save();
     renderEvent();
 }
+
+/* ===== ORDINI ===== */
+
 function renderOrders(){
+
     let ev=data.events[currentEvent];
-    if(ev.orders.length===0) return "Nessun ordine";
+    if(ev.orders.length===0) return "<p>Nessun ordine</p>";
 
     return ev.orders.map((o,i)=>`
         <div class="order-box">
-            <strong>${o.name}</strong><br>
-            ${Object.keys(o.items).map(k=>`${o.items[k]} ${k}`).join(" - ")}
-            <br>
-            € ${calculateTotal(o)} -
-            <span class="${o.paid?'badge-paid':'badge-unpaid'}">
-                ${o.paid?'PAGATO':'NON PAGATO'}
-            </span>
-            <div style="margin-top:8px">
-                <button onclick="togglePaid(${i})">Toggle</button>
-                <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
+
+            <div class="order-name">${o.name}</div>
+
+            <div class="order-row">
+                <div>
+                    ${
+                        ev.type==="Abbigliamento"
+                        ? Object.entries(o.sizes)
+                            .map(([k,v])=>`${v} ${k}`)
+                            .join(" - ")
+                        : o.qty+" pezzi"
+                    }
+                </div>
+
+                <div style="text-align:right;">
+                    <div><b>€ ${o.total}</b></div>
+                    <div class="${o.paid?'badge-paid':'badge-unpaid'}">
+                        ${o.paid?'PAGATO':'NON PAGATO'}
+                    </div>
+                </div>
             </div>
+
+            <div style="margin-top:8px;">
+                <button onclick="editOrder(${i})">Modifica</button>
+                <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
+                <button onclick="togglePaid(${i})">Toggle</button>
+            </div>
+
         </div>
     `).join("");
 }
 
-function calculateTotal(o){
-    let ev=data.events[currentEvent];
-    let tot=0;
-    Object.values(o.items).forEach(q=>tot+=q*ev.price);
-    return tot;
-}
+/* ===== STATISTICHE ===== */
 
-function togglePaid(i){
-    let ev=data.events[currentEvent];
-    ev.orders[i].paid=!ev.orders[i].paid;
-    saveData();
-    renderEvent();
-}
+function renderStatistics(){
 
-function deleteOrder(i){
     let ev=data.events[currentEvent];
-    ev.orders.splice(i,1);
-    saveData();
-    renderEvent();
-}
 
-function renderEmission(){
-    let ev=data.events[currentEvent];
-    let totals={};
+    let totalIncasso=0;
+    let totalPagato=0;
+    let totalPezzi=0;
 
     ev.orders.forEach(o=>{
-        Object.keys(o.items).forEach(k=>{
-            totals[k]=(totals[k]||0)+o.items[k];
-        });
+        totalIncasso+=o.total;
+        if(o.paid) totalPagato+=o.total;
+
+        if(o.sizes){
+            totalPezzi+=Object.values(o.sizes).reduce((a,b)=>a+b,0);
+        }else if(o.qty){
+            totalPezzi+=o.qty;
+        }
     });
 
-    if(Object.keys(totals).length===0) return "Nessun dato";
-
-    return Object.keys(totals).map(k=>`
-        <div>${k}: ${totals[k]} pezzi</div>
-    `).join("");
+    return `
+        <div class="card">
+            <h2>Riepilogo Evento</h2>
+            <div>Totale pezzi: <b>${totalPezzi}</b></div>
+            <div>Incasso totale: <b>€ ${totalIncasso}</b></div>
+            <div>Incassato: <b>€ ${totalPagato}</b></div>
+            <div>Da incassare: <b>€ ${totalIncasso-totalPagato}</b></div>
+        </div>
+    `;
 }
 
-renderPin();
+/* ===== EMISSIONE ORDINE ===== */
+
+function renderEmissione(){
+
+    let ev=data.events[currentEvent];
+    let totals={XS:0,S:0,M:0,L:0,XL:0,XXL:0};
+
+    ev.orders.forEach(o=>{
+        if(o.sizes){
+            Object.keys(totals).forEach(size=>{
+                totals[size]+=o.sizes[size]||0;
+            });
+        }
+    });
+
+    let rows=Object.entries(totals)
+        .filter(([k,v])=>v>0)
+        .map(([k,v])=>`<div>${k}: <b>${v}</b></div>`)
+        .join("");
+
+    if(!rows) return "";
+
+    return `
+        <div class="card">
+            <h2>Emissione Ordine</h2>
+            ${rows}
+            <button onclick="window.print()">Stampa</button>
+        </div>
+    `;
+}
+
+/* ===== BUS BAR ===== */
+
+function renderBusBar(){
+
+    let ev=data.events[currentEvent];
+    let booked=ev.orders.reduce((a,b)=>a+(b.qty||0),0);
+    let percent=ev.seats? (booked/ev.seats)*100 : 0;
+
+    return `
+        <div class="card">
+            <h2>Posti Bus</h2>
+            <div>${booked} / ${ev.seats} posti</div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:${percent}%"></div>
+            </div>
+        </div>
+    `;
+}
+/* ===== MODIFICA ORDINE ===== */
+
+function editOrder(i){
+
+    editIndex = i;
+    let o = data.events[currentEvent].orders[i];
+
+    document.getElementById("clientName").value = o.name;
+    document.getElementById("paidSwitch").checked = o.paid;
+
+    if(o.sizes){
+        Object.entries(o.sizes).forEach(([k,v])=>{
+            document.getElementById("size_"+k).value = v;
+        });
+    }
+
+    if(o.qty){
+        document.getElementById("quantity").value = o.qty;
+    }
+
+    window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ===== TOGGLE PAGATO RAPIDO ===== */
+
+function togglePaid(i){
+    data.events[currentEvent].orders[i].paid =
+        !data.events[currentEvent].orders[i].paid;
+    save();
+    renderEvent();
+}
+
+/* ===== ELIMINA ORDINE ===== */
+
+function deleteOrder(i){
+    if(confirm("Eliminare ordine?")){
+        data.events[currentEvent].orders.splice(i,1);
+        save();
+        renderEvent();
+    }
+}
+
+/* ===== ANNULLA MODIFICA ===== */
+
+function cancelEdit(){
+    editIndex = null;
+    renderEvent();
+}
+
+/* ===== AVVIO APP ===== */
+
+updateDots();  // inizializza pallini PIN
+
+/* ===== CHIUSURA SCRIPT ===== */
 </script>
 </body>
 </html>
