@@ -420,22 +420,15 @@ document.getElementById("app").innerHTML = `
 ${ev.type === "Abbigliamento" ? renderSizes() : `
 <input id="quantity" type="number" placeholder="Quantità">
 `}
-
-<div <div class="paid-row">
-    <span class="paid-label left">NON PAGATO</span>
-
 <div class="paid-container">
-    <span class="paid-label left">NON PAGATO</span>
+  <span class="paid-label left">NON PAGATO</span>
 
-    <label class="switch">
-        <input type="checkbox" id="paidSwitch">
-        <span class="slider"></span>
-    </label>
+  <label class="switch">
+    <input type="checkbox" id="paidSwitch">
+    <span class="slider"></span>
+  </label>
 
-    <span class="paid-label right">PAGATO</span>
-</div>
-
-    <span class="paid-label right">PAGATO</span>
+  <span class="paid-label right">PAGATO</span>
 </div>
 
 <div style="display:flex;gap:10px">
