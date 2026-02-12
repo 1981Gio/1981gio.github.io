@@ -3,8 +3,8 @@
   "short_name": "GiOrders",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#0A84FF",
+  "theme_color": "#0A84FF",
   "icons": [
     {
       "src": "1FFB8DDC-1EC1-4569-971E-598213CC5587.png",
