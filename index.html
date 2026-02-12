@@ -43,8 +43,6 @@ h2{
     font-weight:700;
 }
 
-/* ===== INPUT ===== */
-
 input,select{
     width:100%;
     padding:12px;
@@ -71,110 +69,7 @@ button:active{
 .primary{background:#007aff;color:white;}
 .gray{background:#d1d1d6;}
 .danger{background:#ff3b30;color:white;}
-
 .hidden{display:none;}
-
-/* ===== PIN SCREEN ===== */
-
-#pinScreen{
-    position:fixed;
-    inset:0;
-    background:linear-gradient(160deg,#007aff,#005edb);
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    color:white;
-}
-
-.pin-dots{
-    font-size:32px;
-    letter-spacing:12px;
-    margin:25px 0;
-}
-
-.keypad{
-    display:grid;
-    grid-template-columns:repeat(3,85px);
-    gap:18px;
-}
-
-.keypad button{
-    padding:22px;
-    font-size:20px;
-    border-radius:20px;
-    background:rgba(255,255,255,0.15);
-    color:white;
-    backdrop-filter:blur(10px);
-}
-
-/* ===== SWITCH iOS ===== */
-
-.paid-container{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:18px;
-    margin:18px 0;
-    font-weight:600;
-    font-size:13px;
-}
-
-.paid-label{
-    opacity:0.5;
-    transition:.3s;
-}
-
-.paid-label.left{color:#ff3b30;}
-.paid-label.right{color:#34c759;}
-
-.switch{
-    position:relative;
-    display:inline-block;
-    width:50px;
-    height:28px;
-}
-
-.switch input{display:none;}
-
-.slider{
-    position:absolute;
-    inset:0;
-    background:#ccc;
-    border-radius:34px;
-    transition:.3s;
-}
-
-.slider:before{
-    position:absolute;
-    content:"";
-    height:22px;
-    width:22px;
-    left:3px;
-    top:3px;
-    background:white;
-    border-radius:50%;
-    transition:.3s;
-}
-
-input:checked + .slider{
-    background:#34c759;
-}
-
-input:checked + .slider:before{
-    transform:translateX(22px);
-}
-
-/* Evidenzia etichetta attiva */
-input:checked ~ .paid-label.right{
-    opacity:1;
-}
-
-input:not(:checked) ~ .paid-label.left{
-    opacity:1;
-}
-
-/* ===== ORDINI ===== */
 
 .order-box{
     padding:12px 0;
@@ -191,6 +86,7 @@ input:not(:checked) ~ .paid-label.left{
     font-weight:700;
     font-size:16px;
     margin-bottom:4px;
+    cursor:pointer;
 }
 
 .order-row{
@@ -200,17 +96,8 @@ input:not(:checked) ~ .paid-label.left{
     font-size:14px;
 }
 
-.badge-paid{
-    color:#34c759;
-    font-weight:700;
-}
-
-.badge-unpaid{
-    color:#ff3b30;
-    font-weight:700;
-}
-
-/* ===== TAGLIE ===== */
+.badge-paid{color:#34c759;font-weight:700;}
+.badge-unpaid{color:#ff3b30;font-weight:700;}
 
 .size-row{
     display:flex;
@@ -219,11 +106,7 @@ input:not(:checked) ~ .paid-label.left{
     margin-bottom:10px;
 }
 
-.size-row select{
-    width:80px;
-}
-
-/* ===== BARRA BUS ===== */
+.size-row select{width:80px;}
 
 .progress-bar{
     height:14px;
@@ -239,47 +122,22 @@ input:not(:checked) ~ .paid-label.left{
     transition:width .3s ease;
 }
 
-/* ===== STAMPA ===== */
-
 @media print{
     button{display:none;}
 }
 
 </style>
 </head>
-
 <body>
 
-<div id="pinScreen">
-    <h2>GiOrders Pro</h2>
-    <div id="pinDots" class="pin-dots">○ ○ ○ ○</div>
-
-    <div class="keypad">
-        <button onclick="pressPin(1)">1</button>
-        <button onclick="pressPin(2)">2</button>
-        <button onclick="pressPin(3)">3</button>
-        <button onclick="pressPin(4)">4</button>
-        <button onclick="pressPin(5)">5</button>
-        <button onclick="pressPin(6)">6</button>
-        <button onclick="pressPin(7)">7</button>
-        <button onclick="pressPin(8)">8</button>
-        <button onclick="pressPin(9)">9</button>
-        <button onclick="clearPin()">C</button>
-        <button onclick="pressPin(0)">0</button>
-        <button onclick="checkPin()">OK</button>
-    </div>
-</div>
-
+<div id="pinScreen"></div>
 <div id="app" class="hidden"></div>
 
 <script>
 /* ===== DATI ===== */
 
 let data = JSON.parse(localStorage.getItem("giorders_pro_v2")) || {
-    settings:{
-        pin:"1926",
-        dark:false
-    },
+    settings:{ pin:"1926", dark:false },
     events:[]
 };
 
@@ -293,43 +151,51 @@ function save(){
     localStorage.setItem("giorders_pro_v2", JSON.stringify(data));
 }
 
-/* ===== PIN ===== */
+/* ===== PIN SCREEN ===== */
+
+document.getElementById("pinScreen").innerHTML = `
+    <div style="position:fixed;inset:0;background:linear-gradient(160deg,#007aff,#005edb);
+    display:flex;flex-direction:column;justify-content:center;align-items:center;color:white;">
+        <h2>GiOrders Pro</h2>
+        <div id="pinDots" style="font-size:32px;letter-spacing:12px;margin:25px 0;">○ ○ ○ ○</div>
+        <div style="display:grid;grid-template-columns:repeat(3,85px);gap:18px;">
+            ${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="pressPin(${n})">${n}</button>`).join("")}
+            <button onclick="clearPin()">C</button>
+            <button onclick="pressPin(0)">0</button>
+            <button onclick="checkPin()">OK</button>
+        </div>
+    </div>
+`;
 
 function updateDots(){
-    let dots = "";
+    let dots="";
     for(let i=0;i<4;i++){
-        dots += i < tempPin.length ? "● " : "○ ";
+        dots+= i<tempPin.length ? "● " : "○ ";
     }
-    document.getElementById("pinDots").innerText = dots.trim();
+    document.getElementById("pinDots").innerText=dots.trim();
 }
 
 function pressPin(n){
-    if(tempPin.length < 4){
-        tempPin += n;
+    if(tempPin.length<4){
+        tempPin+=n;
         updateDots();
     }
 }
 
 function clearPin(){
-    tempPin = "";
+    tempPin="";
     updateDots();
 }
 
 function checkPin(){
-    if(tempPin === data.settings.pin){
-        document.getElementById("pinScreen").style.display = "none";
+    if(tempPin===data.settings.pin){
+        document.getElementById("pinScreen").style.display="none";
         document.getElementById("app").classList.remove("hidden");
         renderHome();
     }else{
-        // animazione errore
-        let el = document.getElementById("pinDots");
-        el.style.transform="translateX(8px)";
-        setTimeout(()=>el.style.transform="translateX(-8px)",80);
-        setTimeout(()=>el.style.transform="translateX(0px)",160);
         clearPin();
     }
 }
-
 /* ===== HOME ===== */
 
 function renderHome(){
@@ -373,9 +239,7 @@ function renderHome(){
                                 <div style="font-weight:700;">${e.name}</div>
                                 <div style="font-size:12px;opacity:.6;">${e.type}</div>
                             </div>
-                            <div style="font-size:13px;">
-                                € ${e.price}
-                            </div>
+                            <div style="font-size:13px;">€ ${e.price}</div>
                         </div>
 
                         <div style="margin-top:10px;display:flex;gap:8px;">
@@ -392,23 +256,14 @@ function renderHome(){
 /* ===== EVENTI ===== */
 
 function addEvent(){
-    let name = document.getElementById("evName").value.trim();
-    let type = document.getElementById("evType").value;
-    let price = parseFloat(document.getElementById("evPrice").value) || 0;
-    let seats = parseInt(document.getElementById("evSeats").value) || 0;
+    let name=document.getElementById("evName").value.trim();
+    let type=document.getElementById("evType").value;
+    let price=parseFloat(document.getElementById("evPrice").value)||0;
+    let seats=parseInt(document.getElementById("evSeats").value)||0;
 
-    if(!name){
-        alert("Inserisci nome evento");
-        return;
-    }
+    if(!name) return;
 
-    data.events.push({
-        name,
-        type,
-        price,
-        seats,
-        orders:[]
-    });
+    data.events.push({ name,type,price,seats,orders:[] });
 
     save();
     renderHome();
@@ -423,15 +278,15 @@ function deleteEvent(i){
 }
 
 function openEvent(i){
-    currentEvent = i;
-    editIndex = null;
+    currentEvent=i;
+    editIndex=null;
     renderEvent();
 }
 
 /* ===== DARK MODE ===== */
 
 function toggleDark(){
-    data.settings.dark = !data.settings.dark;
+    data.settings.dark=!data.settings.dark;
     save();
     renderHome();
 }
@@ -439,9 +294,9 @@ function toggleDark(){
 /* ===== CAMBIO PIN ===== */
 
 function changePin(){
-    let newPin = prompt("Nuovo PIN a 4 cifre:");
+    let newPin=prompt("Nuovo PIN a 4 cifre:");
     if(newPin && newPin.length===4){
-        data.settings.pin = newPin;
+        data.settings.pin=newPin;
         save();
         alert("PIN aggiornato");
     }
@@ -450,23 +305,22 @@ function changePin(){
 /* ===== BACKUP ===== */
 
 function exportBackup(){
-    let blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "giorders_backup.json";
+    let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    let a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="giorders_backup.json";
     a.click();
 }
 
 function importBackup(e){
     if(!e.target.files[0]) return;
 
-    let reader = new FileReader();
-    reader.onload = function(){
+    let reader=new FileReader();
+    reader.onload=function(){
         try{
-            data = JSON.parse(reader.result);
+            data=JSON.parse(reader.result);
             save();
             renderHome();
-            alert("Backup ripristinato");
         }catch{
             alert("File non valido");
         }
@@ -477,43 +331,26 @@ function importBackup(e){
 
 function renderEvent(){
 
-    let ev = data.events[currentEvent];
+    let ev=data.events[currentEvent];
 
-    document.getElementById("app").innerHTML = `
+    document.getElementById("app").innerHTML=`
         <div class="card">
             <h2>${ev.name} - €${ev.price}</h2>
 
             ${editIndex!==null ? `
-                <div style="
-                    background:#fff3cd;
-                    padding:10px;
-                    border-radius:12px;
-                    margin-bottom:12px;
-                    font-weight:600;
-                    text-align:center;
-                ">
+                <div style="background:#fff3cd;padding:10px;border-radius:12px;margin-bottom:12px;font-weight:600;text-align:center;">
                     ✏️ Modifica in corso
-                </div>
-            ` : ""}
+                </div>`:""}
 
             <input id="clientName" placeholder="Nome">
 
-            ${ev.type === "Abbigliamento" ? renderSizes() : `
+            ${ev.type==="Abbigliamento"?renderSizes():`
                 <input id="quantity" type="number" placeholder="Quantità">
             `}
 
-            <div class="paid-container">
-                <span class="paid-label left">NON PAGATO</span>
-                <label class="switch">
-                    <input type="checkbox" id="paidSwitch">
-                    <span class="slider"></span>
-                </label>
-                <span class="paid-label right">PAGATO</span>
-            </div>
-
             <div style="display:flex;gap:8px;">
                 <button class="primary" onclick="saveOrder()">
-                    ${editIndex!==null ? "Aggiorna" : "Salva"}
+                    ${editIndex!==null?"Aggiorna":"Salva"}
                 </button>
                 <button class="gray" onclick="cancelEdit()">Annulla</button>
                 <button class="gray" onclick="renderHome()">Indietro</button>
@@ -526,11 +363,9 @@ function renderEvent(){
         </div>
 
         ${renderStatistics()}
-        ${ev.type==="Abbigliamento" ? renderEmissione() : ""}
-        ${ev.type==="Bus" ? renderBusBar() : ""}
+        ${ev.type==="Abbigliamento"?renderEmissione():""}
+        ${ev.type==="Bus"?renderBusBar():""}
     `;
-
-    window.scrollTo({top:0,behavior:"smooth"});
 }
 
 /* ===== TAGLIE ===== */
@@ -546,7 +381,6 @@ function renderSizes(){
         </div>
     `).join("");
 }
-
 /* ===== SALVA ORDINE ===== */
 
 function saveOrder(){
@@ -555,13 +389,9 @@ function saveOrder(){
     let name=document.getElementById("clientName").value.trim();
     if(!name) return;
 
-    let order={
-        name,
-        paid:document.getElementById("paidSwitch").checked
-    };
+    let order={name};
 
     if(ev.type==="Abbigliamento"){
-
         order.sizes={};
         let totalQty=0;
 
@@ -575,20 +405,9 @@ function saveOrder(){
 
         if(totalQty===0) return;
         order.total=totalQty*ev.price;
-
     }else{
-
         let q=parseInt(document.getElementById("quantity").value)||0;
         if(q===0) return;
-
-        if(ev.type==="Bus"){
-            let booked=ev.orders.reduce((a,b)=>a+(b.qty||0),0);
-            if(editIndex===null && booked+q>ev.seats){
-                alert("Posti insufficienti");
-                return;
-            }
-        }
-
         order.qty=q;
         order.total=q*ev.price;
     }
@@ -614,9 +433,7 @@ function renderOrders(){
     return ev.orders.map((o,i)=>`
         <div class="order-box ${editIndex===i?'editing':''}">
 
-            <div class="order-name"
-                 onclick="editOrder(${i})"
-                 style="cursor:pointer;">
+            <div class="order-name" onclick="editOrder(${i})">
                 ${o.name}
             </div>
 
@@ -624,28 +441,67 @@ function renderOrders(){
                 <div>
                     ${
                         ev.type==="Abbigliamento"
-                        ? Object.entries(o.sizes)
-                            .map(([k,v])=>`${v} ${k}`)
-                            .join(" - ")
+                        ? Object.entries(o.sizes).map(([k,v])=>`${v} ${k}`).join(" - ")
                         : o.qty+" pezzi"
                     }
                 </div>
 
                 <div style="text-align:right;">
                     <div><b>€ ${o.total}</b></div>
-                    <div class="${o.paid?'badge-paid':'badge-unpaid'}">
-                        ${o.paid?'PAGATO':'NON PAGATO'}
-                    </div>
                 </div>
             </div>
 
             <div style="margin-top:8px;display:flex;gap:6px;">
-                <button onclick="togglePaid(${i})">Toggle</button>
-                <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
+                ${editIndex===null
+                    ? `<button onclick="deleteOrder(${i})" class="danger">Elimina</button>`
+                    : ""
+                }
             </div>
 
         </div>
     `).join("");
+}
+
+/* ===== MODIFICA ===== */
+
+function editOrder(i){
+
+    editIndex=i;
+    let ev=data.events[currentEvent];
+    let o=ev.orders[i];
+
+    document.getElementById("clientName").value=o.name;
+
+    if(o.sizes){
+        ["XS","S","M","L","XL","XXL","XXXL"].forEach(s=>{
+            let el=document.getElementById("size_"+s);
+            if(el) el.value=o.sizes[s]||0;
+        });
+    }
+
+    if(o.qty){
+        let q=document.getElementById("quantity");
+        if(q) q.value=o.qty;
+    }
+
+    renderEvent();
+}
+
+/* ===== CANCELLA ORDINE ===== */
+
+function deleteOrder(i){
+    if(confirm("Eliminare ordine?")){
+        data.events[currentEvent].orders.splice(i,1);
+        save();
+        renderEvent();
+    }
+}
+
+/* ===== ANNULLA MODIFICA ===== */
+
+function cancelEdit(){
+    editIndex=null;
+    renderEvent();
 }
 
 /* ===== STATISTICHE ===== */
@@ -653,19 +509,15 @@ function renderOrders(){
 function renderStatistics(){
 
     let ev=data.events[currentEvent];
-
     let totale=0;
-    let pagato=0;
     let pezzi=0;
 
     ev.orders.forEach(o=>{
         totale+=o.total;
-        if(o.paid) pagato+=o.total;
-
         if(o.sizes){
             pezzi+=Object.values(o.sizes).reduce((a,b)=>a+b,0);
-        }else if(o.qty){
-            pezzi+=o.qty;
+        }else{
+            pezzi+=o.qty||0;
         }
     });
 
@@ -674,8 +526,6 @@ function renderStatistics(){
             <h2>Riepilogo Evento</h2>
             <div>Totale pezzi: <b>${pezzi}</b></div>
             <div>Incasso totale: <b>€ ${totale}</b></div>
-            <div>Incassato: <b>€ ${pagato}</b></div>
-            <div>Da incassare: <b>€ ${totale-pagato}</b></div>
         </div>
     `;
 }
@@ -717,7 +567,7 @@ function renderBusBar(){
 
     let ev=data.events[currentEvent];
     let booked=ev.orders.reduce((a,b)=>a+(b.qty||0),0);
-    let percent=ev.seats? (booked/ev.seats)*100 : 0;
+    let percent=ev.seats? (booked/ev.seats)*100:0;
 
     return `
         <div class="card">
@@ -729,67 +579,8 @@ function renderBusBar(){
         </div>
     `;
 }
-/* ===== MODIFICA ORDINE ===== */
 
-function editOrder(i){
-
-    editIndex = i;
-    let o = data.events[currentEvent].orders[i];
-
-    document.getElementById("clientName").value = o.name;
-    document.getElementById("paidSwitch").checked = o.paid;
-
-    if(o.sizes){
-        Object.entries(o.sizes).forEach(([k,v])=>{
-            let el = document.getElementById("size_"+k);
-            if(el) el.value = v;
-        });
-    }
-
-    if(o.qty){
-        let q = document.getElementById("quantity");
-        if(q) q.value = o.qty;
-    }
-
-    window.scrollTo({top:0,behavior:"smooth"});
-}
-
-/* ===== TOGGLE PAGATO RAPIDO ===== */
-
-function togglePaid(i){
-    data.events[currentEvent].orders[i].paid =
-        !data.events[currentEvent].orders[i].paid;
-
-    save();
-    renderEvent();
-}
-
-/* ===== ELIMINA ORDINE ===== */
-
-function deleteOrder(i){
-    if(confirm("Eliminare ordine?")){
-        data.events[currentEvent].orders.splice(i,1);
-        save();
-        renderEvent();
-    }
-}
-
-/* ===== ANNULLA MODIFICA ===== */
-
-function cancelEdit(){
-    editIndex = null;
-    renderEvent();
-}
-
-/* ===== AVVIO APP ===== */
-
-// Applica dark mode se salvata
-document.body.classList.toggle("dark", data.settings.dark);
-
-// Inizializza PIN
 updateDots();
-
-/* ===== CHIUSURA SCRIPT ===== */
 </script>
 </body>
 </html>
