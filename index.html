@@ -472,11 +472,8 @@ function renderOrders(){
 function editOrder(i){
 
     editIndex = i;
+    renderEvent(); // ricostruisce la pagina con evidenziazione
 
-    // 🔁 Ricarica la pagina evento per applicare classe editing
-    renderEvent();
-
-    // ⏳ Aspetta che il DOM venga ricreato
     setTimeout(()=>{
 
         let ev = data.events[currentEvent];
@@ -485,32 +482,37 @@ function editOrder(i){
         // Nome
         document.getElementById("clientName").value = o.name;
 
-        // Pagato
+        // Switch pagato
         document.getElementById("paidSwitch").checked = o.paid;
 
-        // Reset taglie
-        ["XS","S","M","L","XL","XXL","XXXL"].forEach(s=>{
-            let el = document.getElementById("size_"+s);
-            if(el) el.value = 0;
-        });
-
-        // Valorizza taglie
+        // TAGLIE
         if(o.sizes){
             Object.entries(o.sizes).forEach(([k,v])=>{
                 let el = document.getElementById("size_"+k);
                 if(el) el.value = v;
             });
+
+            // focus sulla prima taglia compilata
+            let firstSize = Object.keys(o.sizes)[0];
+            if(firstSize){
+                let el = document.getElementById("size_"+firstSize);
+                if(el) el.focus();
+            }
         }
 
         // Quantità semplice
         if(o.qty){
             let q = document.getElementById("quantity");
-            if(q) q.value = o.qty;
+            if(q){
+                q.value = o.qty;
+                q.focus();
+            }
         }
 
-        // 🔥 Scroll sempre in alto
         window.scrollTo({top:0,behavior:"smooth"});
 
+    }, 50);
+}
     }, 50);
 }
 
