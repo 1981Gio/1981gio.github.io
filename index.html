@@ -430,11 +430,16 @@ function renderOrders(){
     let ev = data.events[currentEvent];
     if(ev.orders.length === 0) return "<p>Nessun ordine</p>";
 
-    return ev.orders.map((o,i)=>`
-        <div class="order-box ${editIndex===i ? 'editing' : ''}">
+    // 🔤 Ordine alfabetico per nome
+    let sorted = [...ev.orders]
+        .map((o,i)=>({ ...o, originalIndex:i }))
+        .sort((a,b)=> a.name.localeCompare(b.name,"it"));
+
+    return sorted.map(o=>`
+        <div class="order-box ${editIndex===o.originalIndex ? 'editing' : ''}">
 
             <div class="order-name"
-                 onclick="editOrder(${i})"
+                 onclick="editOrder(${o.originalIndex})"
                  style="cursor:pointer;">
                 ${o.name}
             </div>
@@ -452,15 +457,15 @@ function renderOrders(){
 
                 <div style="text-align:right;">
                     <div><b>€ ${o.total}</b></div>
-                    <div class="${o.paid ? 'badge-paid' : 'badge-unpaid'}">
-                        ${o.paid ? 'PAGATO' : 'NON PAGATO'}
+                    <div class="${o.paid?'badge-paid':'badge-unpaid'}">
+                        ${o.paid?'PAGATO':'NON PAGATO'}
                     </div>
                 </div>
             </div>
 
             <div style="margin-top:8px;display:flex;gap:6px;">
-                <button onclick="editOrder(${i})">Modifica</button>
-                <button class="danger" onclick="deleteOrder(${i})">Elimina</button>
+                <button onclick="editOrder(${o.originalIndex})">Modifica</button>
+                <button class="danger" onclick="deleteOrder(${o.originalIndex})">Elimina</button>
             </div>
 
         </div>
